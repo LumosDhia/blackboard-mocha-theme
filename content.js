@@ -184,15 +184,20 @@
     }
   }
 
-  // The legal links in the sidebar footer (Confidentialite / Conditions
-  // generales / Accessibilite). Matched on link text rather than class:
-  // they sit in a MUI list whose JSS suffixes change between builds.
-  const LEGAL_LINK_RE = /^(confidentialit|conditions g[\u00e9e]n|accessibilit|privacy|terms of use|accessibility)/i;
+  // Sidebar footer links to hide: the legal trio (Confidentialite /
+  // Conditions generales / Accessibilite) plus Deconnexion. Matched on link
+  // text rather than class — they sit in a MUI list whose JSS suffixes
+  // change between builds.
+  //
+  // NOTE: hiding Deconnexion removes the only sign-out control in the UI.
+  // Drop `d[ee]connexion|sign out|log out` from this pattern to get the
+  // button back; until then, sign out by clearing the site's cookies.
+  const HIDDEN_SIDEBAR_LINK_RE = /^(confidentialit|conditions g[\u00e9e]n|accessibilit|privacy|terms of use|accessibility|d[\u00e9e]connexion|sign out|log out)/i;
 
-  function hideLegalFooter(root) {
+  function hideSidebarLinks(root) {
     root.querySelectorAll('a').forEach((link) => {
       const text = link.textContent.trim();
-      if (text.length > 40 || !LEGAL_LINK_RE.test(text)) return;
+      if (text.length > 40 || !HIDDEN_SIDEBAR_LINK_RE.test(text)) return;
       (link.closest('li') || link).classList.add('bbm-hidden-control');
     });
   }
@@ -300,7 +305,7 @@
     hideTerms(document);
     scanForCards(document);
     hideToolbarExceptSearch(document);
-    hideLegalFooter(document);
+    hideSidebarLinks(document);
     updateResultCount();
   }
 

@@ -65,6 +65,15 @@ call in `fullScan()` to get them back.
 The results count next to it is rewritten to exclude hidden courses, so it
 reports what you can actually see rather than Blackboard's own total.
 
+## Sidebar
+
+`hideSidebarLinks` in `content.js` hides the sidebar footer links:
+Confidentialité, Conditions générales, Accessibilité — and **Déconnexion**.
+
+Hiding Déconnexion removes the only sign-out control in the UI. Drop
+`d[ée]connexion|sign out|log out` from `HIDDEN_SIDEBAR_LINK_RE` to get the
+button back; until then, sign out by clearing the site's cookies.
+
 ## Known limitations
 
 - **Closed shadow DOM.** If any part of Blackboard Ultra's UI uses *closed*
