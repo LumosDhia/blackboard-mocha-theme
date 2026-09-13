@@ -213,6 +213,13 @@ sets `sessionStorage['bbm.bypass'] = '1'` and lasts until the tab is closed.
 If the API call fails, the page shows the error plus the same button rather
 than leaving you stranded.
 
+**And back again.** While the bypass is on, a "Revenir à Mocha" button sits
+in the bottom-left of Blackboard's own course list; it clears the flag and
+reloads. Without it the bypass is a one-way door — the button that *sets* it
+lives on a page that no longer renders, and the flag survives reloads, so
+there is nothing on screen to say what happened or how to undo it. Closing
+the tab also clears it, since sessionStorage is per-tab.
+
 Only the course list is taken over. Course interiors, Calendar, Messages,
 Grades and login are Blackboard's, and stay that way.
 

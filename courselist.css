@@ -677,3 +677,36 @@ body.bbm-railed {
     display: none;
   }
 }
+
+/* ---------------------------------------------------------- way back in
+ *
+ * Shown on Blackboard's own course list when the takeover has been bypassed
+ * via "Blackboard d'origine". Without it the bypass is a one-way door: the
+ * button that sets it lives on a page that no longer renders, and the flag
+ * survives reloads.
+ *
+ * Selectors are `body .bbm-restore` and !important because this button sits
+ * outside .bbm-app, on a page mocha.css is actively restyling — `body
+ * button { ... !important }` would otherwise win.
+ */
+
+body .bbm-restore {
+  position: fixed !important;
+  left: 18px !important;
+  bottom: 18px !important;
+  z-index: 2147483001 !important;
+  padding: 9px 15px !important;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--ctp-crust, #11111b) !important;
+  background-color: var(--ctp-mauve, #cba6f7) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  box-shadow: 0 6px 18px rgba(17, 17, 27, 0.45) !important;
+}
+
+body .bbm-restore:hover {
+  background-color: var(--ctp-lavender, #b4befe) !important;
+}

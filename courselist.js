@@ -102,6 +102,31 @@
     return res.json();
   }
 
+  // The bypass was one-way: it hid the only control that could undo it, and
+  // sessionStorage survives reloads, so the page stayed on Blackboard's own
+  // UI with nothing on screen explaining why or how to get back. This puts a
+  // way back on the original page.
+  function offerReturn() {
+    if (document.querySelector('.bbm-restore')) return;
+    document.body.append(
+      el('button', {
+        class: 'bbm-restore',
+        type: 'button',
+        text: 'Revenir à Mocha',
+        title: "Réactiver la liste de cours Mocha sur cette page",
+        onclick: () => {
+          try {
+            sessionStorage.removeItem(BYPASS_KEY);
+          } catch (e) {
+            /* storage blocked — the reload below still clears it for this
+               load, since `bypassed()` will read null. */
+          }
+          location.reload();
+        },
+      })
+    );
+  }
+
   function bypassToOriginal() {
     try {
       sessionStorage.setItem(BYPASS_KEY, '1');
@@ -327,7 +352,12 @@
   let started = false;
 
   function activate() {
-    if (started || !shouldRun()) return;
+    if (started) return;
+    if (!shouldRun()) {
+      // On the course list but bypassed: offer the way back instead.
+      if (COURSE_LIST_RE.test(location.pathname) && bypassed()) offerReturn();
+      return;
+    }
     started = true;
     // boot.js normally sets this at document_start; set it here too for the
     // SPA case below, where boot.js never ran for this URL.
