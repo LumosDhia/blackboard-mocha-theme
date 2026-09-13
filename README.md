@@ -408,3 +408,37 @@ Replace the body of `makePlaceholderDataUrl()` in `content.js` with logic
 that returns a URL to one of your own bundled images (e.g.
 `browser.runtime.getURL('thumbnails/course-1.png')`), or extend it to pick
 an image based on the course name/code.
+
+## Esprit ARP (arp.esprit.tn)
+
+`arp.css` is a second, independent theme in the same extension — its own
+`content_scripts` entry, its own copy of the palette, sharing nothing with
+`mocha.css`. It covers the whole host rather than just `/online`, since the
+app redirects to `/auth/jwt/login` and a white login page in front of a dark
+app would be worse than either.
+
+ARP is a Material-UI app (the "Minimals" template — `Public Sans` is the
+tell) rendered through emotion, and that dictates the approach:
+
+- **There is nothing to override.** `/assets/index-*.css` is 3KB of simplebar
+  and nothing else; every app style is injected at runtime into
+  `<style data-emotion>` tags.
+- **The generated class names are hashed** (`css-1q2w3e`) and change every
+  build, so they are useless as selectors.
+- **MUI also emits stable semantic classes** next to the hashed ones —
+  `MuiPaper-root`, `MuiOutlinedInput-notchedOutline`,
+  `MuiButton-containedPrimary`. Those are the hooks, and they are versioned
+  by MUI rather than by this app. 38 elements carry them on the login page
+  alone.
+- Emotion's styles land with higher specificity than a plain class selector,
+  so nearly every rule here needs `!important`.
+
+Two things needed a hook that was not a Paper: the login hero (a plain
+`MuiStack` with a white scrim over a background image) and MUI's notched
+outline, which is a `<fieldset>` sibling of the input rather than a border on
+it — recolouring the input alone leaves the outline untouched.
+
+⚠️ **Only the login page is verified.** The signed-in `/online` app was not
+reachable during this pass, so its tables, drawer, app bar, dialogs and any
+DataGrid are themed from MUI's standard class names but unconfirmed against
+the real thing.

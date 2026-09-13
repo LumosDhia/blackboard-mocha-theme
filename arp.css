@@ -1,0 +1,321 @@
+/* Catppuccin Mocha for Esprit ARP (https://arp.esprit.tn).
+ *
+ * Separate file, separate site, separate content_scripts entry — it shares
+ * nothing with mocha.css except the palette, which is repeated here so this
+ * file stands alone.
+ *
+ * ARP is a Material-UI app (the "Minimals" template — Public Sans is its
+ * tell) rendered through emotion. That shapes the whole approach:
+ *
+ *   * There is no real stylesheet to override. /assets/index-*.css is 3KB of
+ *     simplebar and nothing else; every app style is injected at runtime into
+ *     <style data-emotion> tags.
+ *   * The generated class names are hashed (`css-1q2w3e`) and change on every
+ *     build, so they are useless as selectors.
+ *   * But MUI also emits stable semantic classes next to the hashed ones —
+ *     MuiPaper-root, MuiOutlinedInput-root, MuiButton-containedPrimary. Those
+ *     are the hooks, and they are versioned by MUI rather than by this app.
+ *
+ * Emotion's styles land in the document with higher specificity than a plain
+ * class selector, so nearly everything here needs !important.
+ */
+
+:root {
+  --ctp-rosewater: #f5e0dc;
+  --ctp-flamingo: #f2cdcd;
+  --ctp-pink: #f5c2e7;
+  --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8;
+  --ctp-maroon: #eba0ac;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1;
+  --ctp-teal: #94e2d5;
+  --ctp-sky: #89dceb;
+  --ctp-sapphire: #74c7ec;
+  --ctp-blue: #89b4fa;
+  --ctp-lavender: #b4befe;
+  --ctp-text: #cdd6f4;
+  --ctp-subtext1: #bac2de;
+  --ctp-subtext0: #a6adc8;
+  --ctp-overlay2: #9399b2;
+  --ctp-overlay1: #7f849c;
+  --ctp-overlay0: #6c7086;
+  --ctp-surface2: #585b70;
+  --ctp-surface1: #45475a;
+  --ctp-surface0: #313244;
+  --ctp-base: #1e1e2e;
+  --ctp-mantle: #181825;
+  --ctp-crust: #11111b;
+}
+
+/* Tells form controls, scrollbars and any UA-rendered widget to use dark
+ * defaults, so they do not stay white underneath everything below. */
+html {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: var(--ctp-base) !important;
+  color: var(--ctp-text) !important;
+}
+
+/* ------------------------------------------------------------- surfaces */
+
+/* Paper is MUI's surface primitive: cards, menus, dialogs and the app bar
+ * are all Paper underneath, so this one rule covers most of the app. */
+.MuiPaper-root,
+.MuiCard-root,
+.MuiAccordion-root,
+.MuiAlert-root {
+  background-color: var(--ctp-mantle) !important;
+  background-image: none !important;
+  color: var(--ctp-text) !important;
+}
+
+/* Raised surfaces sit above the page rather than casting a light shadow. */
+.MuiPaper-elevation1,
+.MuiPaper-elevation2,
+.MuiPaper-elevation3,
+.MuiPaper-elevation4,
+.MuiCard-root {
+  border: 1px solid var(--ctp-surface0) !important;
+  box-shadow: none !important;
+}
+
+.MuiAppBar-root {
+  background-color: var(--ctp-mantle) !important;
+  border-bottom: 1px solid var(--ctp-surface0) !important;
+  box-shadow: none !important;
+}
+
+.MuiDrawer-paper {
+  background-color: var(--ctp-mantle) !important;
+  border-right: 1px solid var(--ctp-surface0) !important;
+}
+
+.MuiDialog-paper,
+.MuiPopover-paper,
+.MuiMenu-paper,
+.MuiTooltip-tooltip {
+  background-color: var(--ctp-surface0) !important;
+  color: var(--ctp-text) !important;
+  border: 1px solid var(--ctp-surface1) !important;
+}
+
+.MuiBackdrop-root {
+  background-color: rgba(17, 17, 27, 0.7) !important;
+}
+
+.MuiDivider-root {
+  border-color: var(--ctp-surface0) !important;
+}
+
+/* The login page's hero half is not a Paper — it is a plain MuiStack with a
+ * white scrim over a background image
+ * (`linear-gradient(rgba(255,255,255,.88), …), url(…)`), so none of the
+ * surface rules above reach it and it stayed bright white beside a themed
+ * form. Dropping the image entirely is safe here: the logo and the
+ * illustration on top of it are real <img> elements, not part of the
+ * background. Scoped to `main >` so ordinary layout stacks inside the app
+ * keep whatever background they were given. */
+main > .MuiStack-root {
+  background-image: none !important;
+  background-color: var(--ctp-mantle) !important;
+}
+
+/* ------------------------------------------------------------------ text */
+
+.MuiTypography-root {
+  color: var(--ctp-text) !important;
+}
+
+.MuiTypography-body2,
+.MuiTypography-caption,
+.MuiTypography-subtitle2 {
+  color: var(--ctp-subtext0) !important;
+}
+
+a,
+.MuiLink-root {
+  color: var(--ctp-blue) !important;
+}
+
+a:hover,
+.MuiLink-root:hover {
+  color: var(--ctp-sapphire) !important;
+}
+
+/* ----------------------------------------------------------- form fields */
+
+.MuiInputBase-root,
+.MuiOutlinedInput-root,
+.MuiFilledInput-root {
+  color: var(--ctp-text) !important;
+  background-color: var(--ctp-crust) !important;
+}
+
+/* MUI draws the field border as a <fieldset> sibling, not as a border on the
+ * input, so recolouring the input alone leaves the outline untouched. */
+.MuiOutlinedInput-notchedOutline {
+  border-color: var(--ctp-surface1) !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--ctp-surface2) !important;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--ctp-lavender) !important;
+}
+
+.MuiInputBase-input::placeholder {
+  color: var(--ctp-overlay0) !important;
+  opacity: 1 !important;
+}
+
+.MuiFormLabel-root,
+.MuiInputLabel-root {
+  color: var(--ctp-subtext0) !important;
+}
+
+.MuiFormLabel-root.Mui-focused,
+.MuiInputLabel-root.Mui-focused {
+  color: var(--ctp-lavender) !important;
+}
+
+.MuiFormHelperText-root {
+  color: var(--ctp-overlay1) !important;
+}
+
+.MuiFormLabel-root.Mui-error,
+.MuiFormHelperText-root.Mui-error {
+  color: var(--ctp-red) !important;
+}
+
+.MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline {
+  border-color: var(--ctp-red) !important;
+}
+
+/* Chrome paints autofilled fields a hard yellow that no background rule
+ * beats; a long inset shadow is the usual way to cover it. */
+.MuiInputBase-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ctp-text) !important;
+  box-shadow: 0 0 0 1000px var(--ctp-crust) inset !important;
+}
+
+/* --------------------------------------------------------------- buttons */
+
+.MuiButton-contained,
+.MuiButton-containedPrimary {
+  color: var(--ctp-crust) !important;
+  background-color: var(--ctp-mauve) !important;
+  box-shadow: none !important;
+}
+
+.MuiButton-contained:hover,
+.MuiButton-containedPrimary:hover {
+  background-color: var(--ctp-lavender) !important;
+}
+
+.MuiButton-outlined {
+  color: var(--ctp-text) !important;
+  border-color: var(--ctp-surface1) !important;
+}
+
+.MuiButton-outlined:hover {
+  border-color: var(--ctp-surface2) !important;
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiButton-text,
+.MuiIconButton-root {
+  color: var(--ctp-subtext0) !important;
+}
+
+.MuiButton-text:hover,
+.MuiIconButton-root:hover {
+  color: var(--ctp-text) !important;
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiButton-root.Mui-disabled {
+  color: var(--ctp-overlay0) !important;
+  background-color: var(--ctp-surface0) !important;
+}
+
+/* ------------------------------------------------ lists, tables, chips */
+
+.MuiListItemButton-root:hover,
+.MuiMenuItem-root:hover {
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiListItemButton-root.Mui-selected,
+.MuiMenuItem-root.Mui-selected {
+  color: var(--ctp-mauve) !important;
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiListItemIcon-root,
+.MuiListItemText-secondary {
+  color: var(--ctp-overlay1) !important;
+}
+
+.MuiTableCell-root {
+  color: var(--ctp-text) !important;
+  border-bottom-color: var(--ctp-surface0) !important;
+}
+
+.MuiTableCell-head,
+.MuiTableHead-root .MuiTableCell-root {
+  color: var(--ctp-subtext0) !important;
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiTableRow-root:hover {
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiChip-root {
+  color: var(--ctp-text) !important;
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiTabs-indicator {
+  background-color: var(--ctp-mauve) !important;
+}
+
+.MuiTab-root {
+  color: var(--ctp-overlay1) !important;
+}
+
+.MuiTab-root.Mui-selected {
+  color: var(--ctp-text) !important;
+}
+
+/* Status colours, kept semantic rather than all flattened to mauve. */
+.MuiAlert-standardError,
+.MuiAlert-standardWarning,
+.MuiAlert-standardSuccess,
+.MuiAlert-standardInfo {
+  background-color: var(--ctp-surface0) !important;
+}
+
+.MuiAlert-standardError { color: var(--ctp-red) !important; }
+.MuiAlert-standardWarning { color: var(--ctp-peach) !important; }
+.MuiAlert-standardSuccess { color: var(--ctp-green) !important; }
+.MuiAlert-standardInfo { color: var(--ctp-sky) !important; }
+
+/* -------------------------------------------------------------- scrollbar */
+
+/* simplebar is the one thing ARP ships real CSS for, so it is also the one
+ * place a plain selector is enough. */
+.simplebar-scrollbar::before {
+  background-color: var(--ctp-surface2) !important;
+}
+
+* {
+  scrollbar-color: var(--ctp-surface2) var(--ctp-base);
+}
