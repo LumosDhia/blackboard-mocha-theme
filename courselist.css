@@ -110,14 +110,22 @@ body.bbm-takeover-body {
  * coverage to begin with, so the startpage resolves those characters the
  * same way. */
 :root {
-  --bbm-mono: "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
+  /* After the bundled face come the names the font is actually *installed*
+     under on this machine ("JetBrainsMono Nerd Font Mono", "JetBrainsMono
+     NFM"). "JetBrains Mono" on its own matches nothing here — it is the
+     upstream name, not the Nerd Font packaging — so if the bundled woff2
+     ever fails to load, the stack would have fallen straight through to
+     generic monospace. */
+  --bbm-mono: "JetBrainsMonoNLNerdFontMono", "JetBrainsMono Nerd Font Mono",
+    "JetBrainsMono NFM", "JetBrains Mono", monospace;
   /* Course entries. Hack Nerd Font is first, but it is NOT installed on this
      machine and NOT bundled — nothing under ~/.local/share/fonts or fc-list
      has a Hack face — so today this resolves to the same JetBrains Mono as
      everything else. Install Hack Nerd Font and the entries pick it up with
      no change here; until then the fallback is deliberate, not an oversight. */
   --bbm-mono-entries: "Hack Nerd Font", "HackNerdFont", "Hack",
-    "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
+    "JetBrainsMonoNLNerdFontMono", "JetBrainsMono Nerd Font Mono",
+    "JetBrainsMono NFM", "JetBrains Mono", monospace;
   /* rose-startpage's --font-size-base. Its whole scale hangs off this one
      number: the heading is 2em of it, and titles and entries inherit it
      outright. Ours was 14px, which is the main reason the two pages did not
