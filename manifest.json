@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Blackboard Mocha",
+  "version": "0.1.0",
+  "description": "Catppuccin Mocha theme and placeholder course thumbnails for Blackboard Learn (Esprit), applied client-side only.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "blackboard-mocha@lumosdhia"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://esprit.blackboard.com/*"],
+      "css": ["mocha.css"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

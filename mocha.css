@@ -1,0 +1,184 @@
+/* Catppuccin Mocha reskin for Blackboard Learn Ultra.
+ *
+ * Blackboard's real class names weren't inspected live (this was built
+ * without a logged-in session), so selectors below are deliberately broad
+ * (substring/attribute matches) rather than exact class names, to survive
+ * Blackboard's own naming and skin changes. If something on the real page
+ * doesn't restyle, open Firefox DevTools, inspect the element, and add a
+ * more specific rule here.
+ *
+ * Known limitation: Blackboard Ultra's UI is partly built from custom
+ * elements that may use *closed* Shadow DOM. Closed shadow roots can't be
+ * styled from a content script at all. content.js injects this same
+ * stylesheet into every *open* shadow root it can find, but closed ones
+ * are simply out of reach from an extension.
+ */
+
+:root {
+  --ctp-rosewater: #f5e0dc;
+  --ctp-flamingo: #f2cdcd;
+  --ctp-pink: #f5c2e7;
+  --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8;
+  --ctp-maroon: #eba0ac;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1;
+  --ctp-teal: #94e2d5;
+  --ctp-sky: #89dceb;
+  --ctp-sapphire: #74c7ec;
+  --ctp-blue: #89b4fa;
+  --ctp-lavender: #b4befe;
+  --ctp-text: #cdd6f4;
+  --ctp-subtext1: #bac2de;
+  --ctp-subtext0: #a6adc8;
+  --ctp-overlay2: #9399b2;
+  --ctp-overlay1: #7f849c;
+  --ctp-overlay0: #6c7086;
+  --ctp-surface2: #585b70;
+  --ctp-surface1: #45475a;
+  --ctp-surface0: #313244;
+  --ctp-base: #1e1e2e;
+  --ctp-mantle: #181825;
+  --ctp-crust: #11111b;
+}
+
+html {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: var(--ctp-base) !important;
+  color: var(--ctp-text) !important;
+}
+
+/* Generic surfaces: headers, nav bars, footers, panels, cards, modals */
+body header,
+body nav,
+body footer,
+body [role="banner"],
+body [role="navigation"],
+body [class*="header" i],
+body [class*="nav" i],
+body [class*="toolbar" i],
+body [class*="sidebar" i],
+body [class*="panel" i],
+body [class*="modal" i],
+body [class*="dialog" i],
+body [class*="popover" i],
+body [class*="menu" i] {
+  background-color: var(--ctp-mantle) !important;
+  color: var(--ctp-text) !important;
+  border-color: var(--ctp-surface0) !important;
+}
+
+/* Cards / tiles (course cards live in here) */
+body [class*="card" i],
+body [class*="tile" i] {
+  background-color: var(--ctp-surface0) !important;
+  color: var(--ctp-text) !important;
+  border-color: var(--ctp-surface1) !important;
+}
+
+/* Text elements */
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6 {
+  color: var(--ctp-lavender) !important;
+}
+
+body p,
+body span,
+body li,
+body label,
+body td,
+body th {
+  color: var(--ctp-text) !important;
+}
+
+body [class*="subtitle" i],
+body [class*="secondary" i],
+body [class*="muted" i],
+body [class*="hint" i],
+body small {
+  color: var(--ctp-subtext0) !important;
+}
+
+/* Links */
+body a {
+  color: var(--ctp-blue) !important;
+}
+body a:hover {
+  color: var(--ctp-sapphire) !important;
+}
+body a:visited {
+  color: var(--ctp-mauve) !important;
+}
+
+/* Buttons and primary actions */
+body button,
+body [role="button"],
+body input[type="button"],
+body input[type="submit"],
+body [class*="btn" i],
+body [class*="button" i] {
+  background-color: var(--ctp-surface1) !important;
+  color: var(--ctp-text) !important;
+  border-color: var(--ctp-surface2) !important;
+}
+
+body [class*="primary" i][class*="btn" i],
+body [class*="primary" i][class*="button" i],
+body button[type="submit"] {
+  background-color: var(--ctp-mauve) !important;
+  color: var(--ctp-crust) !important;
+}
+
+/* Form fields */
+body input,
+body textarea,
+body select {
+  background-color: var(--ctp-surface0) !important;
+  color: var(--ctp-text) !important;
+  border-color: var(--ctp-surface2) !important;
+}
+body input::placeholder,
+body textarea::placeholder {
+  color: var(--ctp-overlay0) !important;
+}
+
+/* Scrollbars, for the Firefox-native scrollbar theming API */
+* {
+  scrollbar-color: var(--ctp-surface2) var(--ctp-mantle);
+}
+
+/* Alerts / badges — keep semantic hues but pull them from the Mocha palette */
+body [class*="success" i] {
+  background-color: var(--ctp-green) !important;
+  color: var(--ctp-crust) !important;
+}
+body [class*="warning" i] {
+  background-color: var(--ctp-yellow) !important;
+  color: var(--ctp-crust) !important;
+}
+body [class*="danger" i],
+body [class*="error" i] {
+  background-color: var(--ctp-red) !important;
+  color: var(--ctp-crust) !important;
+}
+body [class*="info" i] {
+  background-color: var(--ctp-sky) !important;
+  color: var(--ctp-crust) !important;
+}
+
+/* Course thumbnail placeholders injected by content.js */
+.bbm-thumb-placeholder {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
