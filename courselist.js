@@ -166,7 +166,6 @@
         return {
           id: m.course.id,
           title: name.label,
-          group: name.group,
           code: code.label,
           termId: m.course.termId,
           role: m.courseRoleId,
@@ -203,15 +202,12 @@
   // heading already says what kind of course this is, and anything else in
   // the card was competing with the one thing you actually read.
   //
-  // The code and class group stay in data-search even though neither is
-  // shown, so searching "SCI-M03" or "4CCE14" still finds the course.
   function courseCard(course) {
     return el(
       'a',
       {
         class: 'bbm-course',
         href: course.url,
-        'data-search': `${course.title} ${course.code} ${course.group || ''}`.toLowerCase(),
         title: course.available ? null : 'Cours indisponible',
       },
       el('h3', { class: 'bbm-course-name', text: course.title }),
@@ -224,47 +220,21 @@
   function render({ courses, termById }) {
     const columns = groupByCategory(courses, termById);
 
-    const search = el('input', {
-      class: 'bbm-search',
-      type: 'search',
-      placeholder: 'Rechercher un cours…',
-      'aria-label': 'Rechercher un cours',
-      autocomplete: 'off',
-    });
-
     // One column per category. A column with nothing in it still renders its
-    // heading, so the four columns stay aligned across the page instead of
-    // reflowing when a category happens to be empty this semester.
-    const sections = columns.map((column) =>
-      el(
-        'section',
-        { class: 'bbm-col' },
-        el('h2', { class: 'bbm-col-name', text: column.label }),
-        el('div', { class: 'bbm-col-body' }, ...column.courses.map(courseCard))
+    // heading, so the four stay aligned instead of reflowing when a category
+    // happens to be empty this semester.
+    const board = el(
+      'div',
+      { class: 'bbm-columns' },
+      ...columns.map((column) =>
+        el(
+          'section',
+          { class: 'bbm-col' },
+          el('h2', { class: 'bbm-col-name', text: column.label }),
+          el('div', { class: 'bbm-col-body' }, ...column.courses.map(courseCard))
+        )
       )
     );
-
-    const board = el('div', { class: 'bbm-columns' }, ...sections);
-
-    const empty = el('p', { class: 'bbm-empty', hidden: '', text: 'Aucun cours ne correspond.' });
-
-    // Filtering is a class toggle over a fixed set of nodes rather than a
-    // re-render: 29 cards, each already carrying its own search haystack.
-    search.addEventListener('input', () => {
-      const q = search.value.trim().toLowerCase();
-      let shown = 0;
-      for (const section of sections) {
-        let inSection = 0;
-        for (const card of section.querySelectorAll('.bbm-course')) {
-          const hit = !q || card.dataset.search.includes(q);
-          card.classList.toggle('bbm-filtered-out', !hit);
-          if (hit) inSection++;
-        }
-        section.classList.toggle('bbm-col-empty', inSection === 0);
-        shown += inSection;
-      }
-      empty.hidden = shown !== 0;
-    });
 
     const app = el(
       'div',
@@ -283,7 +253,6 @@
         el(
           'div',
           { class: 'bbm-top-right' },
-          search,
           el('button', {
             class: 'bbm-escape',
             type: 'button',
@@ -293,8 +262,7 @@
           })
         )
       ),
-      board,
-      empty
+      board
     );
 
     mount(app);

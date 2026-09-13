@@ -65,16 +65,14 @@ has no CJK coverage at all, so rose-startpage resolves them the same way. If
 you want the kana in a specific face, add it to the stack ahead of
 `monospace` — re-subsetting this file cannot help.
 
-What the page gives you: courses split into four columns by subject and a
-live search box. A card is the course's full name and nothing else — no
+What the page gives you: courses split into four columns by subject. An entry
+is the course's full name and nothing else — no
 thumbnail, no code chip, no last-accessed line. The name is never truncated;
 a long one wraps and the card grows. Clicking a course is a real navigation
 into the real Blackboard UI.
 
-The code and class group are still searchable even though neither is
-displayed, so typing `SCI-M03` or `4CCE14` finds the course. The one thing a
-card will still show besides the name is an "Indisponible" tag, since
-otherwise it would be a link that quietly goes nowhere.
+The one thing an entry will show besides the name is an "Indisponible" tag,
+since otherwise it would be a link that quietly goes nowhere.
 
 Note the displayed name has Esprit's `__4CCE14` class-group suffix stripped
 (`BBM.splitGroup` in `shared.js`). Drop that call in `courseCard` if you want
@@ -117,6 +115,15 @@ under it — weight and the rosewater accent carry it, exactly as
 `li:first-child` does on the startpage. Term filtering still applies
 first — hiding Semestre 2 is a separate setting, and grouping by subject
 doesn't change which semester you want on screen.
+
+Every colour in this UI is set `!important`. `mocha.css` has a generic text
+layer — `body h1..h6 { color: lavender !important }`, `body p, body span
+{ color: text !important }`, `body a { color: blue !important }` — and an
+!important declaration beats a non-important one whatever the specificity, so
+without it every heading came out lavender, every entry blue, and the hover
+colour never appeared at all. The same applies to `body header` and
+`body nav`, which were painting a surface behind the page header and the
+dock.
 
 Entries are plain text lines, not cards — the startpage's `li > a`
 treatment. No background, no border; hovering slides a mauve `> ` marker in

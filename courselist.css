@@ -123,34 +123,21 @@ body.bbm-takeover-body {
   font-display: swap;
 }
 
+/* Colours below carry !important deliberately. mocha.css sets
+ * `body h1..h6 { color: var(--ctp-lavender) !important }` and
+ * `body p, body span, … { color: var(--ctp-text) !important }` as its
+ * generic text layer. An !important declaration beats a non-important one
+ * whatever the specificity, so every heading and every <p>/<span> we create
+ * was silently being repainted — the group titles were lavender, not
+ * rosewater, and the hover colour never showed at all. Ours win because they
+ * are !important *and* more specific. */
+
 .bbm-app .bbm-hello {
   margin: 0;
   font-family: var(--bbm-mono);
   font-size: 2em;
   font-weight: normal;
-  color: var(--ctp-mauve, #cba6f7);
-}
-
-.bbm-app .bbm-search {
-  width: 260px;
-  padding: 9px 13px;
-  font: inherit;
-  font-family: var(--bbm-mono);
-  font-size: 14px;
-  color: var(--ctp-text, #cdd6f4);
-  background-color: var(--ctp-mantle, #181825);
-  border: 1px solid var(--ctp-surface0, #313244);
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 120ms ease;
-}
-
-.bbm-app .bbm-search::placeholder {
-  color: var(--ctp-overlay0, #6c7086);
-}
-
-.bbm-app .bbm-search:focus {
-  border-color: var(--ctp-lavender, #b4befe);
+  color: var(--ctp-mauve, #cba6f7) !important;
 }
 
 .bbm-app .bbm-escape {
@@ -206,7 +193,7 @@ body.bbm-takeover-body {
   font-size: 1em;
   font-weight: 700;
   line-height: 2;
-  color: var(--ctp-rosewater, #f5e0dc);
+  color: var(--ctp-rosewater, #f5e0dc) !important;
 }
 
 /* Indented under its title, exactly as the startpage indents `ul`. No gap
@@ -232,10 +219,6 @@ body.bbm-takeover-body {
 
 /* A column filtered down to nothing keeps its heading so the other three
  * stay put; only the heading dims. */
-.bbm-app .bbm-col-empty .bbm-col-name {
-  opacity: 0.35;
-}
-
 /* ------------------------------------------------------------------ course */
 
 /* Plain text lines, not cards — the startpage's `li > a` treatment: no
@@ -254,7 +237,10 @@ body.bbm-takeover-body {
   min-width: 0;
   overflow-wrap: break-word;
   text-decoration: none;
-  color: var(--ctp-text, #cdd6f4);
+  /* mocha.css restyles `body a` with !important too, so the entry colour and
+     its rosewater hover both have to out-shout it — the h3 inside inherits
+     from here. */
+  color: var(--ctp-text, #cdd6f4) !important;
   transition: transform 0.15s ease, color 0.2s ease;
 }
 
@@ -269,7 +255,7 @@ body.bbm-takeover-body {
 
 .bbm-app .bbm-course:hover {
   transform: translateX(4px);
-  color: var(--ctp-rosewater, #f5e0dc);
+  color: var(--ctp-rosewater, #f5e0dc) !important;
 }
 
 .bbm-app .bbm-course:hover::before {
@@ -281,10 +267,6 @@ body.bbm-takeover-body {
   outline-offset: 2px;
 }
 
-.bbm-app .bbm-course.bbm-filtered-out {
-  display: none;
-}
-
 /* "Virtualisation&Cloud" has no break opportunity and is wider than a
  * quarter-width column, so without this it spills over the next column's
  * text. The startpage never hits this: its labels are short and its columns
@@ -293,26 +275,21 @@ body.bbm-takeover-body {
   display: inline;
   overflow-wrap: break-word;
   margin: 0;
-  font-size: 1em;
+  /* Smaller than the group title above it, which stays at the base size —
+     the hierarchy now comes from size as well as weight and colour. */
+  font-size: 0.78em;
   font-weight: normal;
   line-height: 1.25;
-  color: inherit;
+  color: inherit !important;
 }
 
 .bbm-app .bbm-chip-warn {
   margin-left: 0.5em;
-  font-size: 11px;
-  color: var(--ctp-peach, #fab387);
+  font-size: 0.44em;
+  color: var(--ctp-peach, #fab387) !important;
 }
 
 /* ------------------------------------------------------ empty and failure */
-
-.bbm-app .bbm-empty {
-  padding: 40px 0;
-  font-size: 14px;
-  text-align: center;
-  color: var(--ctp-overlay1, #7f849c);
-}
 
 .bbm-app .bbm-failure {
   max-width: 560px;
@@ -324,14 +301,14 @@ body.bbm-takeover-body {
   margin: 0;
   font-size: 22px;
   font-weight: 600;
-  color: var(--ctp-text, #cdd6f4);
+  color: var(--ctp-text, #cdd6f4) !important;
 }
 
 .bbm-app .bbm-failure-text {
   margin: 14px 0 0;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--ctp-subtext0, #a6adc8);
+  color: var(--ctp-subtext0, #a6adc8) !important;
 }
 
 .bbm-app .bbm-failure-detail {
@@ -378,11 +355,6 @@ body.bbm-takeover-body {
     flex-wrap: wrap;
   }
 
-  .bbm-app .bbm-search {
-    flex: 1;
-    width: auto;
-    min-width: 160px;
-  }
 }
 
 /* ============================================================ task drawer
@@ -489,7 +461,7 @@ body.bbm-takeover-body {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ctp-overlay1, #7f849c);
+  color: var(--ctp-overlay1, #7f849c) !important;
 }
 
 .bbm-dock .bbm-group {
@@ -540,7 +512,7 @@ body.bbm-takeover-body {
   font-size: 13px;
   line-height: 1.5;
   text-align: center;
-  color: var(--ctp-overlay0, #6c7086);
+  color: var(--ctp-overlay0, #6c7086) !important;
 }
 
 .bbm-dock .bbm-group-body {
@@ -563,7 +535,7 @@ body.bbm-takeover-body {
   font-size: 13px;
   font-weight: 500;
   line-height: 1.35;
-  color: var(--ctp-text, #cdd6f4);
+  color: var(--ctp-text, #cdd6f4) !important;
 }
 
 .bbm-dock .bbm-task-line {
@@ -571,7 +543,7 @@ body.bbm-takeover-body {
   gap: 8px;
   margin: 0;
   font-size: 11px;
-  color: var(--ctp-overlay0, #6c7086);
+  color: var(--ctp-overlay0, #6c7086) !important;
 }
 
 .bbm-dock .bbm-task-course {
@@ -583,7 +555,7 @@ body.bbm-takeover-body {
 .bbm-dock .bbm-task-when {
   flex-shrink: 0;
   margin-left: auto;
-  color: var(--ctp-subtext0, #a6adc8);
+  color: var(--ctp-subtext0, #a6adc8) !important;
 }
 
 /* Narrow screens: the drawer would cover most of the page, so let it take a
