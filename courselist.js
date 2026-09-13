@@ -322,8 +322,8 @@
     mount(app);
     // Both of these fix themselves to a viewport edge and append to <body>,
     // outside .bbm-app, rather than joining the page flow.
-    BBM_RAIL.attach();
-    BBM_TASKS.attach();
+    const rail = BBM_RAIL.attach();
+    BBM_TASKS.attach(rail.tasks);
   }
 
   function renderError(err) {

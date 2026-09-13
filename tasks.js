@@ -188,60 +188,41 @@ var BBM_TASKS = (() => {
     return byBucket;
   }
 
-  function updateBadge(dock, tasks) {
+  function updateBadge(trigger, tasks) {
     const seen = readSeen();
     const unseen = tasks.filter((t) => !seen.has(t.id)).length;
-    const badge = dock.querySelector('.bbm-tasks-badge');
-    badge.textContent = unseen > 9 ? '9+' : String(unseen);
-    badge.hidden = unseen === 0;
-    dock.classList.toggle('bbm-tasks-new', unseen > 0);
+    if (trigger) trigger.setBadge(unseen);
     return unseen;
   }
 
   // Opening the drawer is what marks items read — hovering past the edge on
   // the way to something else should not silently clear the badge, so this
   // only fires once the drawer has actually been held open.
-  function markSeen(dock, tasks) {
+  function markSeen(trigger, tasks) {
     writeSeen(new Set(tasks.map((t) => t.id)));
-    updateBadge(dock, tasks);
+    updateBadge(trigger, tasks);
   }
 
+  // The drawer only. Its trigger and unread badge live in the dock now, in
+  // rail.js — this file still owns the count and the open/closed state.
   function build() {
-    const badge = el('span', { class: 'bbm-tasks-badge', hidden: '', 'aria-hidden': 'true' });
-    const tab = el(
-      'button',
-      {
-        class: 'bbm-tasks-tab',
-        type: 'button',
-        'aria-label': 'Tâches à accomplir',
-        'aria-expanded': 'false',
-      },
-      el('span', { class: 'bbm-tasks-tab-text', text: 'Tâches' }),
-      badge
-    );
-
     const drawer = el(
       'aside',
       { class: 'bbm-tasks', 'aria-label': 'Tâches à accomplir' },
       el('h2', { class: 'bbm-tasks-head', text: 'Tâches à accomplir' }),
       el('div', { class: 'bbm-tasks-body' }, el('p', { class: 'bbm-group-empty', text: 'Chargement…' }))
     );
-
-    const dock = el('div', { class: 'bbm-dock' }, tab, drawer);
-
-    // Click pins it open, for touch and for keyboard. Hover is handled in
-    // CSS so it costs nothing per pointer move.
-    tab.addEventListener('click', () => {
-      const open = dock.classList.toggle('bbm-dock-pinned');
-      tab.setAttribute('aria-expanded', String(open));
-    });
-
-    return dock;
+    return el('div', { class: 'bbm-dock' }, drawer);
   }
 
-  async function attach() {
+  async function attach(trigger) {
     const dock = build();
     document.body.append(dock);
+
+    function setOpen(open) {
+      dock.classList.toggle('bbm-dock-open', open);
+      if (trigger) trigger.setOpen(open);
+    }
 
     let tasks = [];
     try {
@@ -255,19 +236,29 @@ var BBM_TASKS = (() => {
     }
 
     render(dock, tasks);
-    updateBadge(dock, tasks);
+    updateBadge(trigger, tasks);
 
-    // Held open for a moment = read. A 600ms dwell is long enough that
-    // brushing the edge with the cursor doesn't count.
-    let dwell = null;
-    const open = () => {
-      clearTimeout(dwell);
-      dwell = setTimeout(() => markSeen(dock, tasks), 600);
-    };
-    const close = () => clearTimeout(dwell);
-    dock.addEventListener('mouseenter', open);
-    dock.addEventListener('mouseleave', close);
-    dock.addEventListener('focusin', open);
+    if (trigger && trigger.button) {
+      trigger.button.addEventListener('click', () => {
+        const open = !dock.classList.contains('bbm-dock-open');
+        setOpen(open);
+        // Opening is what marks items read — the badge should not clear
+        // while the drawer has never been looked at.
+        if (open) markSeen(trigger, tasks);
+      });
+    }
+
+    // Escape closes, and so does a click anywhere outside. Without the tab
+    // there is no longer an obvious handle to click again to dismiss.
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') setOpen(false);
+    });
+    document.addEventListener('pointerdown', (event) => {
+      if (!dock.classList.contains('bbm-dock-open')) return;
+      if (dock.contains(event.target)) return;
+      if (trigger && trigger.button && trigger.button.contains(event.target)) return;
+      setOpen(false);
+    });
 
     return dock;
   }

@@ -29,6 +29,7 @@ var BBM_RAIL = (() => {
     grades: ['M6 3h7l5 5v13H6z', 'M13 3v5h5', 'm10 17 4-4'],
     assist: ['m5 19 8-8', 'm13 3 1 2 2 1-2 1-1 2-1-2-2-1 2-1z', 'm18 13 .6 1.3 1.3.6-1.3.6-.6 1.3-.6-1.3-1.3-.6 1.3-.6z'],
     tools: ['M5 5h8', 'M5 5v14h14v-8', 'm12 14-3 1 1-3 7-7 2 2z'],
+    tasks: ['M10 6h10M10 12h10M10 18h10', 'm4 6 1.4 1.4L8.2 4.6', 'm4 12 1.4 1.4L8.2 10.6', 'm4 18 1.4 1.4L8.2 16.6'],
   };
 
   const ITEMS = [
@@ -40,6 +41,9 @@ var BBM_RAIL = (() => {
     { path: '/ultra/grades', label: 'Notes', icon: 'grades' },
     { path: '/ultra/integration/bbAssist', label: 'Assist', icon: 'assist' },
     { path: '/ultra/tools', label: 'Outils', icon: 'tools' },
+    // No path: rendered as a button rather than a link. It opens the task
+    // drawer in place instead of navigating, and carries the unread badge.
+    { action: 'tasks', label: 'Tâches à accomplir', icon: 'tasks' },
   ];
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -65,12 +69,20 @@ var BBM_RAIL = (() => {
   }
 
   function row(item, currentPath) {
-    const here = currentPath === item.path;
-    const link = document.createElement('a');
-    link.className = `bbm-rail-item${here ? ' bbm-rail-on' : ''}`;
-    link.href = ORIGIN + item.path;
-    link.setAttribute('aria-label', item.label);
-    if (here) link.setAttribute('aria-current', 'page');
+    const here = !item.action && currentPath === item.path;
+    // A link navigates; an action stays on the page, so it must be a button
+    // — not an <a href="#"> that would push a history entry and steal focus
+    // styling from the real links.
+    const node = document.createElement(item.action ? 'button' : 'a');
+    node.className = `bbm-rail-item${here ? ' bbm-rail-on' : ''}`;
+    if (item.action) {
+      node.type = 'button';
+      node.dataset.action = item.action;
+    } else {
+      node.href = ORIGIN + item.path;
+      if (here) node.setAttribute('aria-current', 'page');
+    }
+    node.setAttribute('aria-label', item.label);
 
     // The glyph is wrapped because magnification scales it and only it — the
     // label must not scale with the icon, and the row itself carries the
@@ -83,8 +95,18 @@ var BBM_RAIL = (() => {
     label.className = 'bbm-rail-label';
     label.textContent = item.label;
 
-    link.append(glyph, label);
-    return link;
+    node.append(glyph, label);
+
+    if (item.action === 'tasks') {
+      const badge = document.createElement('span');
+      badge.className = 'bbm-rail-badge';
+      badge.hidden = true;
+      badge.setAttribute('aria-hidden', 'true');
+      // Inside the glyph so magnification carries the badge with the icon.
+      glyph.append(badge);
+    }
+
+    return node;
   }
 
   // macOS-dock magnification, vertical. Rather than scaling each icon in
@@ -182,7 +204,26 @@ var BBM_RAIL = (() => {
     // clear of it by hand. A class rather than an inline style so the
     // responsive collapse below can change the offset in one place.
     document.body.classList.add('bbm-railed');
-    return rail;
+
+    const button = rail.querySelector('[data-action="tasks"]');
+    const badge = button && button.querySelector('.bbm-rail-badge');
+
+    return {
+      rail,
+      // Handed to tasks.js, which owns the count and the drawer.
+      tasks: {
+        button,
+        setBadge(count) {
+          if (!badge) return;
+          badge.textContent = count > 9 ? '9+' : String(count);
+          badge.hidden = count === 0;
+          if (button) button.classList.toggle('bbm-rail-has-news', count > 0);
+        },
+        setOpen(open) {
+          if (button) button.setAttribute('aria-expanded', String(open));
+        },
+      },
+    };
   }
 
   return { attach, ITEMS };
