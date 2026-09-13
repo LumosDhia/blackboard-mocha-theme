@@ -1,0 +1,343 @@
+// Blackboard Mocha — course list, rendered from Blackboard's REST API
+// instead of from its DOM.
+//
+// This replaces the course list page outright rather than restyling it. The
+// reasoning, and the endpoint probe this is built on, are in CONTEXT.md
+// ("The REST API route"). The short version:
+//
+//   * Running on esprit.blackboard.com means `credentials: 'include'` sends
+//     the session cookie the browser already has. No developer key, no OAuth
+//     secret, no institution admin approval — the server cannot tell these
+//     calls apart from the SPA's own.
+//   * Reading JSON sidesteps every fragility the DOM reskin fights: JSS class
+//     suffixes that change per build, AngularJS binding titles after first
+//     paint, the contrast audit. Blackboard's REST shapes are versioned and
+//     move far more slowly than its CSS.
+//
+// Field names below were read off live responses, not guessed.
+//
+// Scope is deliberately the course list and nothing else. Every other page —
+// course interiors, Messages, Grades, login — is left to Blackboard and its
+// reskin. Clicking a course does a real navigation into the real UI.
+
+(() => {
+  const ORIGIN = 'https://esprit.blackboard.com';
+  const BYPASS_KEY = 'bbm.bypass';
+  const COURSE_LIST_RE = /^\/ultra\/course\/?$/;
+
+  // Same rule as content.js's HIDDEN_TERM_PATTERNS, matched against the term
+  // name from /learn/api/v1/terms. Note the live data spells it "Semestre2"
+  // with no space, which is why \s* is not \s+. Set to [] to show everything.
+  const HIDDEN_TERM_PATTERNS = [/semestre\s*2/i];
+
+  // Esprit suffixes both the course name and the course code with the class
+  // group: "Machine Learning avancé__4CCE14", "ESE.SR-02__4CCE14". Split it
+  // off so the card can show a clean title with the group as its own chip.
+  const GROUP_SEP = '__';
+
+  if (!COURSE_LIST_RE.test(location.pathname)) return;
+  if (!document.documentElement.classList.contains('bbm-takeover')) return;
+
+  // ---------------------------------------------------------------- helpers
+
+  function el(tag, props, ...children) {
+    const node = document.createElement(tag);
+    if (props) {
+      for (const [k, v] of Object.entries(props)) {
+        if (v === null || v === undefined) continue;
+        if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else if (k === 'style') node.setAttribute('style', v);
+        else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+        else node.setAttribute(k, v);
+      }
+    }
+    for (const child of children) {
+      if (child === null || child === undefined || child === false) continue;
+      node.append(child);
+    }
+    return node;
+  }
+
+  async function api(path) {
+    // Absolute URL, always. The page carries
+    // <base href="https://dmuwut6e40u5o.cloudfront.net/">, so a relative
+    // "/learn/api/..." resolves to the CDN, goes cross-origin and dies as a
+    // bare "TypeError: Failed to fetch" with no status — which looks exactly
+    // like an auth failure and is not one.
+    const res = await fetch(ORIGIN + path, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
+    return res.json();
+  }
+
+  function splitGroup(value) {
+    const raw = (value || '').trim();
+    const at = raw.indexOf(GROUP_SEP);
+    if (at === -1) return { label: raw, group: null };
+    return { label: raw.slice(0, at).trim(), group: raw.slice(at + GROUP_SEP.length).trim() || null };
+  }
+
+  // "il y a 3 j" etc. Blackboard reports lastAccessed per membership, which
+  // is genuinely useful for ordering a 29-course list and which its own card
+  // grid never surfaces.
+  function relativeTime(iso) {
+    if (!iso) return null;
+    const then = Date.parse(iso);
+    if (Number.isNaN(then)) return null;
+    const mins = Math.round((Date.now() - then) / 60000);
+    if (mins < 1) return "à l'instant";
+    if (mins < 60) return `il y a ${mins} min`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `il y a ${hours} h`;
+    const days = Math.round(hours / 24);
+    if (days < 30) return `il y a ${days} j`;
+    const months = Math.round(days / 30);
+    return `il y a ${months} mois`;
+  }
+
+  function bypassToOriginal() {
+    try {
+      sessionStorage.setItem(BYPASS_KEY, '1');
+    } catch (e) {
+      /* storage blocked — the reload below still drops the takeover for
+         this load, it just won't persist across the next navigation. */
+    }
+    location.reload();
+  }
+
+  function finishBoot() {
+    document.documentElement.classList.remove('bbm-booting');
+    const style = document.getElementById('bbm-boot-style');
+    if (style) style.remove();
+  }
+
+  // ------------------------------------------------------------------- data
+
+  async function load() {
+    const [me, memberships, terms] = await Promise.all([
+      api('/learn/api/public/v1/users/me'),
+      // expand=course folds the whole course record into each membership, so
+      // the entire list is one request rather than 1 + N.
+      api('/learn/api/public/v1/users/me/courses?expand=course&limit=200'),
+      api('/learn/api/v1/terms'),
+    ]);
+
+    const termById = new Map();
+    for (const term of terms.results || []) termById.set(term.id, term);
+
+    const courses = (memberships.results || [])
+      .filter((m) => m.course && m.course.name)
+      .map((m) => {
+        const name = splitGroup(m.course.name);
+        const code = splitGroup(m.course.courseId);
+        return {
+          id: m.course.id,
+          title: name.label,
+          group: name.group,
+          code: code.label,
+          termId: m.course.termId,
+          role: m.courseRoleId,
+          lastAccessed: m.lastAccessed,
+          available: !m.course.availability || m.course.availability.available === 'Yes',
+          // Blackboard hands us the canonical deep link; no need to build one.
+          url: m.course.externalAccessUrl || `${ORIGIN}/ultra/courses/${m.course.id}/outline`,
+        };
+      });
+
+    return { me, courses, termById };
+  }
+
+  function groupByTerm(courses, termById) {
+    const groups = new Map();
+    for (const course of courses) {
+      const term = termById.get(course.termId);
+      const name = (term && term.name) || 'Autres cours';
+      if (HIDDEN_TERM_PATTERNS.some((re) => re.test(name))) continue;
+      if (!groups.has(name)) groups.set(name, { name, start: term && term.startDate, courses: [] });
+      groups.get(name).courses.push(course);
+    }
+    for (const group of groups.values()) {
+      group.courses.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+    }
+    // Newest term first; terms with no start date sink to the bottom.
+    return [...groups.values()].sort((a, b) => {
+      if (a.start && b.start) return Date.parse(b.start) - Date.parse(a.start);
+      if (a.start) return -1;
+      if (b.start) return 1;
+      return a.name.localeCompare(b.name, 'fr');
+    });
+  }
+
+  // ------------------------------------------------------------------ views
+
+  function courseCard(course) {
+    const [c1, c2] = BBM_PALETTE.pairFor(course.title);
+    const seen = relativeTime(course.lastAccessed);
+
+    // Gradient only, no text. content.js has to burn the course name into
+    // its canvas placeholder because it is replacing an image Blackboard
+    // already positioned; here the title sits in the body below, so printing
+    // it on the banner too would just say everything twice.
+    const banner = el('div', {
+      class: 'bbm-course-banner',
+      style: `background-image: linear-gradient(135deg, ${c1}, ${c2})`,
+      'aria-hidden': 'true',
+    });
+
+    return el(
+      'a',
+      {
+        class: 'bbm-course',
+        href: course.url,
+        'data-search': `${course.title} ${course.code} ${course.group || ''}`.toLowerCase(),
+      },
+      banner,
+      el(
+        'div',
+        { class: 'bbm-course-body' },
+        el('h3', { class: 'bbm-course-name', text: course.title }),
+        el(
+          'div',
+          { class: 'bbm-course-meta' },
+          el('span', { class: 'bbm-chip', text: course.code }),
+          course.group && el('span', { class: 'bbm-chip bbm-chip-dim', text: course.group }),
+          !course.available && el('span', { class: 'bbm-chip bbm-chip-warn', text: 'Indisponible' })
+        ),
+        seen && el('p', { class: 'bbm-course-seen', text: `Consulté ${seen}` })
+      )
+    );
+  }
+
+  function render({ me, courses, termById }) {
+    const groups = groupByTerm(courses, termById);
+    const visible = groups.reduce((n, g) => n + g.courses.length, 0);
+    const given = (me.name && me.name.given) || '';
+
+    const search = el('input', {
+      class: 'bbm-search',
+      type: 'search',
+      placeholder: 'Rechercher un cours…',
+      'aria-label': 'Rechercher un cours',
+      autocomplete: 'off',
+    });
+
+    const count = el('p', {
+      class: 'bbm-count',
+      text: `${visible} cours`,
+    });
+
+    const sections = groups.map((group) =>
+      el(
+        'section',
+        { class: 'bbm-term' },
+        el('h2', { class: 'bbm-term-name', text: group.name }),
+        el('div', { class: 'bbm-grid' }, ...group.courses.map(courseCard))
+      )
+    );
+
+    const empty = el('p', { class: 'bbm-empty', hidden: '', text: 'Aucun cours ne correspond.' });
+
+    // Filtering is a class toggle over a fixed set of nodes rather than a
+    // re-render: 29 cards, each already carrying its own search haystack.
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      let shown = 0;
+      for (const section of sections) {
+        let inSection = 0;
+        for (const card of section.querySelectorAll('.bbm-course')) {
+          const hit = !q || card.dataset.search.includes(q);
+          card.classList.toggle('bbm-filtered-out', !hit);
+          if (hit) inSection++;
+        }
+        section.hidden = inSection === 0;
+        shown += inSection;
+      }
+      count.textContent = q ? `${shown} sur ${visible} cours` : `${visible} cours`;
+      empty.hidden = shown !== 0;
+    });
+
+    const app = el(
+      'div',
+      { class: 'bbm-app' },
+      el(
+        'header',
+        { class: 'bbm-top' },
+        el(
+          'div',
+          { class: 'bbm-top-left' },
+          el('h1', { class: 'bbm-greeting', text: given ? `Bonjour, ${given}` : 'Mes cours' }),
+          count
+        ),
+        el(
+          'div',
+          { class: 'bbm-top-right' },
+          search,
+          el('button', {
+            class: 'bbm-escape',
+            type: 'button',
+            title: "Recharger la page avec l'interface Blackboard d'origine",
+            text: "Blackboard d'origine",
+            onclick: bypassToOriginal,
+          })
+        )
+      ),
+      ...sections,
+      empty
+    );
+
+    mount(app);
+  }
+
+  function renderError(err) {
+    mount(
+      el(
+        'div',
+        { class: 'bbm-app' },
+        el(
+          'div',
+          { class: 'bbm-failure' },
+          el('h1', { class: 'bbm-greeting', text: 'Chargement impossible' }),
+          el('p', {
+            class: 'bbm-failure-text',
+            text: "La liste des cours n'a pas pu être récupérée depuis l'API de Blackboard.",
+          }),
+          el('pre', { class: 'bbm-failure-detail', text: String((err && err.message) || err) }),
+          el(
+            'div',
+            { class: 'bbm-failure-actions' },
+            el('button', {
+              class: 'bbm-escape',
+              type: 'button',
+              text: 'Réessayer',
+              onclick: () => location.reload(),
+            }),
+            el('button', {
+              class: 'bbm-escape bbm-escape-strong',
+              type: 'button',
+              text: "Blackboard d'origine",
+              onclick: bypassToOriginal,
+            })
+          )
+        )
+      )
+    );
+  }
+
+  // Blackboard's SPA keeps running underneath — timers, its own observers,
+  // its session-keepalive polling. Wiping <body> and letting it carry on is
+  // deliberate: the keepalive is what stops the session expiring while this
+  // page is open, and any navigation out of here is a real page load.
+  function mount(view) {
+    document.body.replaceChildren(view);
+    document.body.classList.add('bbm-takeover-body');
+    finishBoot();
+  }
+
+  load().then(render).catch((err) => {
+    console.error('[bbm] course list takeover failed:', err);
+    renderError(err);
+  });
+})();

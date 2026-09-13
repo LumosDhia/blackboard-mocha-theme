@@ -1,0 +1,297 @@
+/* Blackboard Mocha — styles for the rendered-from-JSON course list
+ * (courselist.js). This is not a reskin of Blackboard's markup: every
+ * element here is one we created, so the rules are plain CSS with no
+ * !important and no defensive substring matching.
+ *
+ * Class names deliberately avoid the substrings mocha.css matches broadly
+ * — "card", "header", "title", "error", "primary" and friends. Those rules
+ * carry !important and would otherwise paint over this UI (a
+ * `body [class*="card" i]` background would flatten the course gradients).
+ * Hence .bbm-course rather than .bbm-card, .bbm-top rather than .bbm-header.
+ * Every selector is still scoped under .bbm-app so it beats mocha.css's
+ * element-level rules (body a, body button, body h1) on specificity.
+ *
+ * Palette variables come from mocha.css, which is injected on every page of
+ * the site and so is present here too.
+ */
+
+html.bbm-booting body {
+  visibility: hidden !important;
+}
+
+body.bbm-takeover-body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--ctp-base, #1e1e2e);
+  color: var(--ctp-text, #cdd6f4);
+  overflow-x: hidden;
+}
+
+.bbm-app {
+  box-sizing: border-box;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 28px 72px;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.bbm-app *,
+.bbm-app *::before,
+.bbm-app *::after {
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------ header */
+
+.bbm-app .bbm-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 22px;
+  margin-bottom: 34px;
+  border-bottom: 1px solid var(--ctp-surface0, #313244);
+}
+
+.bbm-app .bbm-top-left,
+.bbm-app .bbm-top-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bbm-app .bbm-top-left {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.bbm-app .bbm-greeting {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ctp-text, #cdd6f4);
+}
+
+.bbm-app .bbm-count {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ctp-overlay1, #7f849c);
+}
+
+.bbm-app .bbm-search {
+  width: 260px;
+  padding: 9px 13px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ctp-text, #cdd6f4);
+  background-color: var(--ctp-mantle, #181825);
+  border: 1px solid var(--ctp-surface0, #313244);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 120ms ease;
+}
+
+.bbm-app .bbm-search::placeholder {
+  color: var(--ctp-overlay0, #6c7086);
+}
+
+.bbm-app .bbm-search:focus {
+  border-color: var(--ctp-lavender, #b4befe);
+}
+
+.bbm-app .bbm-escape {
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ctp-subtext0, #a6adc8);
+  background-color: transparent;
+  border: 1px solid var(--ctp-surface0, #313244);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.bbm-app .bbm-escape:hover {
+  color: var(--ctp-text, #cdd6f4);
+  border-color: var(--ctp-surface2, #585b70);
+}
+
+.bbm-app .bbm-escape-strong {
+  color: var(--ctp-crust, #11111b);
+  background-color: var(--ctp-lavender, #b4befe);
+  border-color: var(--ctp-lavender, #b4befe);
+}
+
+.bbm-app .bbm-escape-strong:hover {
+  color: var(--ctp-crust, #11111b);
+  background-color: var(--ctp-text, #cdd6f4);
+  border-color: var(--ctp-text, #cdd6f4);
+}
+
+/* ------------------------------------------------------------------- terms */
+
+.bbm-app .bbm-term {
+  margin-bottom: 44px;
+}
+
+.bbm-app .bbm-term-name {
+  margin: 0 0 18px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ctp-overlay1, #7f849c);
+}
+
+.bbm-app .bbm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 20px;
+}
+
+/* ------------------------------------------------------------------ course */
+
+.bbm-app .bbm-course {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-decoration: none;
+  background-color: var(--ctp-mantle, #181825);
+  border: 1px solid var(--ctp-surface0, #313244);
+  border-radius: 12px;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.bbm-app .bbm-course:hover {
+  border-color: var(--ctp-surface2, #585b70);
+  transform: translateY(-2px);
+}
+
+.bbm-app .bbm-course.bbm-filtered-out {
+  display: none;
+}
+
+/* The banner is a CSS gradient, not a canvas PNG. content.js has to encode
+ * a data URL per card because it is overriding a background-image that
+ * Blackboard already set; here we own the element, so the same palette pair
+ * costs nothing to paint. */
+.bbm-app .bbm-course-banner {
+  height: 72px;
+  background-size: cover;
+  background-position: center;
+}
+
+.bbm-app .bbm-course-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+}
+
+.bbm-app .bbm-course-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ctp-text, #cdd6f4);
+}
+
+.bbm-app .bbm-course-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.bbm-app .bbm-chip {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ctp-subtext0, #a6adc8);
+  background-color: var(--ctp-surface0, #313244);
+  border-radius: 5px;
+}
+
+.bbm-app .bbm-chip-dim {
+  color: var(--ctp-overlay0, #6c7086);
+  background-color: transparent;
+  border: 1px solid var(--ctp-surface0, #313244);
+}
+
+.bbm-app .bbm-chip-warn {
+  color: var(--ctp-crust, #11111b);
+  background-color: var(--ctp-peach, #fab387);
+}
+
+.bbm-app .bbm-course-seen {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ctp-overlay0, #6c7086);
+}
+
+/* ------------------------------------------------------ empty and failure */
+
+.bbm-app .bbm-empty {
+  padding: 40px 0;
+  font-size: 14px;
+  text-align: center;
+  color: var(--ctp-overlay1, #7f849c);
+}
+
+.bbm-app .bbm-failure {
+  max-width: 560px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+.bbm-app .bbm-failure-text {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ctp-subtext0, #a6adc8);
+}
+
+.bbm-app .bbm-failure-detail {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-size: 12px;
+  text-align: left;
+  color: var(--ctp-red, #f38ba8);
+  background-color: var(--ctp-mantle, #181825);
+  border: 1px solid var(--ctp-surface0, #313244);
+  border-radius: 8px;
+}
+
+.bbm-app .bbm-failure-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+@media (max-width: 640px) {
+  .bbm-app {
+    padding: 28px 18px 56px;
+  }
+
+  .bbm-app .bbm-top {
+    align-items: stretch;
+  }
+
+  .bbm-app .bbm-top-right {
+    flex-wrap: wrap;
+  }
+
+  .bbm-app .bbm-search {
+    flex: 1;
+    width: auto;
+    min-width: 160px;
+  }
+}

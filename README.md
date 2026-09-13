@@ -1,10 +1,17 @@
 # Blackboard Mocha
 
-A Firefox extension that reskins [Esprit's Blackboard Learn](https://esprit.blackboard.com/)
-in [Catppuccin Mocha](https://github.com/catppuccin/catppuccin) and replaces
-course card thumbnails with generated placeholders. Runs entirely client-side
-in your own browser — it doesn't talk to any server and doesn't touch anyone
-else's view of the site.
+A Firefox extension for [Esprit's Blackboard Learn](https://esprit.blackboard.com/)
+in [Catppuccin Mocha](https://github.com/catppuccin/catppuccin). It does two
+different things:
+
+- **The course list is rebuilt, not restyled.** That page is replaced with a
+  UI rendered from Blackboard's own REST API — none of Blackboard's markup is
+  left on it.
+- **Every other page is reskinned**, the usual way: a stylesheet over
+  Blackboard's DOM, plus generated placeholder thumbnails.
+
+Runs entirely client-side in your own browser — it doesn't talk to any server
+of its own and doesn't touch anyone else's view of the site.
 
 ## Install (temporary, for development/personal use)
 
@@ -18,7 +25,43 @@ This lasts until Firefox restarts. To make it permanent, either:
 - Use `web-ext run` (from the `web-ext` npm package) during development, which
   reloads automatically on file changes.
 
-## What it does
+## The course list
+
+`courselist.js` takes over `https://esprit.blackboard.com/ultra/course` and
+draws it from JSON instead of from the DOM:
+
+```js
+fetch('https://esprit.blackboard.com/learn/api/public/v1/users/me/courses?expand=course&limit=200',
+      {credentials: 'include'})
+```
+
+Because the script runs on `esprit.blackboard.com`, `credentials: 'include'`
+sends the session cookie the browser already has. No developer key, no OAuth
+secret, no institution admin approval — the server can't tell these calls
+apart from Blackboard's own frontend. The endpoint probe behind this is
+written up in `CONTEXT.md`.
+
+Why bother, when a stylesheet already worked: reading JSON sidesteps the
+whole class of problems the reskin fights — JSS class suffixes that change
+per Blackboard build, AngularJS binding course titles after first paint, the
+dark-on-dark contrast audit. The REST shapes are versioned and move far more
+slowly than the markup.
+
+What the page gives you: courses grouped by term, a live search box, the
+course code and class group as separate chips, and a "consulté il y a…" line
+from each membership's `lastAccessed` (which Blackboard's own card grid never
+shows). Clicking a course is a real navigation into the real Blackboard UI.
+
+**Escape hatch.** The "Blackboard d'origine" button reloads the page with the
+takeover off, so the original course list comes back reskinned as before. It
+sets `sessionStorage['bbm.bypass'] = '1'` and lasts until the tab is closed.
+If the API call fails, the page shows the error plus the same button rather
+than leaving you stranded.
+
+Only the course list is taken over. Course interiors, Calendar, Messages,
+Grades and login are Blackboard's, and stay that way.
+
+## What it does elsewhere
 
 - `mocha.css` — recolors common page elements (headers, nav, cards, buttons,
   links, form fields, alerts) using the Catppuccin Mocha palette. Selectors
@@ -38,7 +81,9 @@ This lasts until Firefox restarts. To make it permanent, either:
 
 ## Hiding a term (semester)
 
-`content.js` hides Semestre 2 out of the box:
+Both paths hide Semestre 2 out of the box, and each keeps its own copy of the
+rule — `courselist.js` for the rebuilt list, `content.js` for the reskinned
+one. Change both, or the two views disagree:
 
 ```js
 const HIDDEN_TERM_PATTERNS = [/semestre\s*2/i];
@@ -56,6 +101,9 @@ while the label is what you actually see. Note that Blackboard's own
 courses.
 
 ## Toolbar
+
+Only relevant when the takeover is off (via the escape hatch) — otherwise
+Blackboard's toolbar isn't on the page at all.
 
 Only the search box is kept in the course list's toolbar row. The view
 toggle, the "Périodes de cours" and "Filtres" dropdowns, and the per-page

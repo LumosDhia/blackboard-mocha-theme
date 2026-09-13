@@ -20,6 +20,13 @@
 //     other Ultra pages that may differ.
 
 (() => {
+  // On the course list, courselist.js replaces the page outright with a UI
+  // rendered from Blackboard's REST API, so there is no Blackboard markup
+  // left here to reskin. boot.js sets this marker at document_start, before
+  // either script runs, so the two never fight over the same DOM. Every
+  // other page still goes through the reskin below.
+  if (document.documentElement.classList.contains('bbm-takeover')) return;
+
   // article.element-card.course-element-card ... js-course-details
   const CARD_SELECTORS = [
     'article.course-element-card',
@@ -44,16 +51,6 @@
   // screen. Set to [] to show everything.
   const HIDDEN_TERM_PATTERNS = [/semestre\s*2/i];
 
-  const MOCHA_PAIRS = [
-    ['#f38ba8', '#eba0ac'], // red -> maroon
-    ['#fab387', '#f9e2af'], // peach -> yellow
-    ['#a6e3a1', '#94e2d5'], // green -> teal
-    ['#89dceb', '#74c7ec'], // sky -> sapphire
-    ['#89b4fa', '#b4befe'], // blue -> lavender
-    ['#cba6f7', '#f5c2e7'], // mauve -> pink
-    ['#f2cdcd', '#f5e0dc'], // flamingo -> rosewater
-  ];
-
   const CRUST = '#11111b';
 
   // Banner box on the real page is ~349x128 CSS px; draw at 2x for HiDPI.
@@ -63,15 +60,6 @@
   const processedCards = new WeakSet();
   const processedRoots = new WeakSet();
   let cssText = null;
-
-  function hashString(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-      h = (h << 5) - h + str.charCodeAt(i);
-      h |= 0;
-    }
-    return Math.abs(h);
-  }
 
   function wrapText(ctx, text, maxWidth) {
     const words = text.split(/\s+/).filter(Boolean);
@@ -97,7 +85,7 @@
     const ctx = canvas.getContext('2d');
 
     const text = (label || 'Course').trim();
-    const [c1, c2] = MOCHA_PAIRS[hashString(text) % MOCHA_PAIRS.length];
+    const [c1, c2] = BBM_PALETTE.pairFor(text);
 
     const gradient = ctx.createLinearGradient(0, 0, width, height);
     gradient.addColorStop(0, c1);

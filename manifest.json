@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Blackboard Mocha",
-  "version": "0.1.0",
-  "description": "Catppuccin Mocha theme and placeholder course thumbnails for Blackboard Learn (Esprit), applied client-side only.",
+  "version": "0.2.0",
+  "description": "Catppuccin Mocha theme for Blackboard Learn (Esprit), with the course list rebuilt from Blackboard's own REST API. Client-side only.",
   "browser_specific_settings": {
     "gecko": {
       "id": "blackboard-mocha@lumosdhia"
@@ -10,9 +10,14 @@
   },
   "content_scripts": [
     {
+      "matches": ["https://esprit.blackboard.com/ultra/course*"],
+      "js": ["boot.js"],
+      "run_at": "document_start"
+    },
+    {
       "matches": ["https://esprit.blackboard.com/*"],
-      "css": ["mocha.css"],
-      "js": ["content.js"],
+      "css": ["mocha.css", "courselist.css"],
+      "js": ["palette.js", "content.js", "courselist.js"],
       "run_at": "document_idle",
       "all_frames": true
     }

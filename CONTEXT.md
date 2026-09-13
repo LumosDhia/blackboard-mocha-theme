@@ -203,6 +203,30 @@ Endpoints the course page itself hits, for reference:
 /learn/api/v1/terms
 ```
 
+### Built on this: the course list takeover
+
+`boot.js` + `palette.js` + `courselist.js` + `courselist.css` replace
+`/ultra/course` with a UI rendered from the endpoints above. Verified live by
+injecting them into a logged-in page: 29 memberships fetched, 18 cards
+rendered, 11 hidden as Semestre 2 — the same split the DOM version produced.
+Search filters and the count label tracks it; card hrefs are the real
+`externalAccessUrl` deep links.
+
+Three things worth knowing before touching it:
+
+- **`boot.js` runs at `document_start`** and sets `.bbm-takeover` on `<html>`.
+  That marker is also what makes `content.js` bail, so the reskin and the
+  takeover never fight over the same DOM. It has an 8s failsafe: if
+  `courselist.js` throws before clearing `.bbm-booting`, the page would
+  otherwise stay blank forever.
+- **Class names dodge `mocha.css`'s broad selectors.** `body [class*="card" i]`
+  carries `!important` and would flatten the course gradients, so it is
+  `.bbm-course`, not `.bbm-card`; `.bbm-top`, not `.bbm-header`. Check that
+  list (`grep -o 'class\*="[^"]*"' mocha.css`) before adding a class.
+- **Blackboard's SPA keeps running underneath** the wiped `<body>`. That is
+  deliberate — its keepalive polling is what stops the session expiring while
+  the page is open.
+
 ### Untested
 
 - `v1/streams/ultra` (the activity stream) returns 405 on GET — it is a POST
