@@ -131,71 +131,68 @@ body.bbm-takeover-body {
   border-color: var(--ctp-text, #cdd6f4);
 }
 
-/* ------------------------------------------------------------------- terms */
+/* ----------------------------------------------------------------- columns */
 
-.bbm-app .bbm-term {
-  margin-bottom: 44px;
+/* Four columns, one per course category. Fixed count rather than auto-fill:
+ * the point is the grouping, so the columns must not reflow into a different
+ * number and break the read. */
+.bbm-app .bbm-columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 26px;
+  align-items: start;
 }
 
-.bbm-app .bbm-term-name {
-  margin: 0 0 18px;
-  font-size: 12px;
+.bbm-app .bbm-col-name {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--ctp-overlay1, #7f849c);
+  border-bottom: 1px solid var(--ctp-surface0, #313244);
 }
 
-.bbm-app .bbm-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
-  gap: 20px;
+.bbm-app .bbm-col-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* A column filtered down to nothing keeps its heading so the other three
+ * stay put; only the heading dims. */
+.bbm-app .bbm-col-empty .bbm-col-name {
+  opacity: 0.4;
 }
 
 /* ------------------------------------------------------------------ course */
 
+/* Text only — no banner. See courseCard() in courselist.js. */
 .bbm-app .bbm-course {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 9px;
+  padding: 13px 14px;
   text-decoration: none;
   background-color: var(--ctp-mantle, #181825);
   border: 1px solid var(--ctp-surface0, #313244);
-  border-radius: 12px;
-  transition: border-color 140ms ease, transform 140ms ease;
+  border-radius: 10px;
+  transition: border-color 140ms ease;
 }
 
 .bbm-app .bbm-course:hover {
   border-color: var(--ctp-surface2, #585b70);
-  transform: translateY(-2px);
 }
 
 .bbm-app .bbm-course.bbm-filtered-out {
   display: none;
 }
 
-/* The banner is a CSS gradient, not a canvas PNG. content.js has to encode
- * a data URL per card because it is overriding a background-image that
- * Blackboard already set; here we own the element, so the same palette pair
- * costs nothing to paint. */
-.bbm-app .bbm-course-banner {
-  height: 72px;
-  background-size: cover;
-  background-position: center;
-}
-
-.bbm-app .bbm-course-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px 16px;
-}
-
 .bbm-app .bbm-course-name {
   margin: 0;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.35;
   color: var(--ctp-text, #cdd6f4);
 }
@@ -204,7 +201,6 @@ body.bbm-takeover-body {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: auto;
 }
 
 .bbm-app .bbm-chip {
@@ -215,12 +211,6 @@ body.bbm-takeover-body {
   color: var(--ctp-subtext0, #a6adc8);
   background-color: var(--ctp-surface0, #313244);
   border-radius: 5px;
-}
-
-.bbm-app .bbm-chip-dim {
-  color: var(--ctp-overlay0, #6c7086);
-  background-color: transparent;
-  border: 1px solid var(--ctp-surface0, #313244);
 }
 
 .bbm-app .bbm-chip-warn {
@@ -276,7 +266,18 @@ body.bbm-takeover-body {
   margin-top: 24px;
 }
 
+@media (max-width: 1100px) {
+  .bbm-app .bbm-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 26px;
+  }
+}
+
 @media (max-width: 640px) {
+  .bbm-app .bbm-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .bbm-app {
     padding: 28px 18px 56px;
   }

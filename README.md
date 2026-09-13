@@ -47,10 +47,34 @@ per Blackboard build, AngularJS binding course titles after first paint, the
 dark-on-dark contrast audit. The REST shapes are versioned and move far more
 slowly than the markup.
 
-What the page gives you: courses grouped by term, a live search box, the
-course code and class group as separate chips, and a "consulté il y a…" line
-from each membership's `lastAccessed` (which Blackboard's own card grid never
-shows). Clicking a course is a real navigation into the real Blackboard UI.
+What the page gives you: courses split into four columns by subject, a live
+search box, the course code as a chip, and a "consulté il y a…" line from each
+membership's `lastAccessed` (which Blackboard's own card grid never shows).
+Clicking a course is a real navigation into the real Blackboard UI.
+
+### The four columns
+
+Esprit encodes the category in the course code — `ESE.CCE-03`, `ESE.SCI-M01`,
+`ESE.SH-104` — and nothing in the API exposes it as a field. So the columns
+come from the code prefix (`CATEGORIES` in `courselist.js`), which is stable,
+rather than from the course name, which is free text and contains at least
+one typo of Esprit's own ("Cyber Defense - Systems & Netowrks").
+
+| Column | Prefixes | Courses this semester |
+| --- | --- | --- |
+| Spécialité | `CCE`, `WIN`, `AC`, `INFRES` | 5 |
+| Tronc commun | `SCI-M` | 4 |
+| Technique | `BD`, `AS`, `SR`, `MS`, `DS`, `INFDEV`, `INFWEB` | 5 |
+| Autres | everything else | 4 |
+
+The last column is the catch-all, so a prefix nobody has seen before lands
+somewhere visible instead of disappearing. Term filtering still applies
+first — hiding Semestre 2 is a separate setting, and grouping by subject
+doesn't change which semester you want on screen.
+
+Cards carry no thumbnail. In a quarter-width column there is no room for a
+gradient banner, and the column heading already says what kind of course it
+is. `BBM.pairFor` is still used by `content.js` for the reskinned pages.
 
 ### Navigation rail
 

@@ -227,6 +227,22 @@ Three things worth knowing before touching it:
   deliberate — its keepalive polling is what stops the session expiring while
   the page is open.
 
+### Four-column layout
+
+The list groups by **course-code prefix**, not by term and not by name.
+Verified live against all 29 memberships: with Semestre 2 hidden the 18
+remaining split 5 / 4 / 5 / 4 across Spécialité / Tronc commun / Technique /
+Autres, and the catch-all column absorbs exactly the five non-technical
+prefixes (`FR`, `PR`, `SH`, `ST`, `AN`).
+
+Two reasons the prefix is the right key and the name is not: the API exposes
+no category field at all, and the names are free text — `ESE.CCE-01` is
+called "Cyber Defense - Systems & Netowrks" in Blackboard's own data, typo
+included. Anything matching on names will break on that one.
+
+`ESE.SCI-M03 "Machine Learning avancé"` sits in Tronc commun by its prefix
+though it is really a data/ML course; that is the one genuine straddle.
+
 ### Navigation rail (rail.js)
 
 Blackboard's primary nav, rebuilt down the left edge of the taken-over list.

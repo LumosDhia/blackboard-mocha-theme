@@ -30,6 +30,27 @@
   // with no space, which is why \s* is not \s+. Set to [] to show everything.
   const HIDDEN_TERM_PATTERNS = [/semestre\s*2/i];
 
+  // Esprit encodes the category in the course code, not anywhere the API
+  // exposes as a field — `ESE.CCE-03`, `ESE.SCI-M01`, `ESE.SH-104`. So the
+  // four columns are derived from the code prefix, which is stable, rather
+  // than from the course name, which is free text (and contains at least one
+  // typo: "Cyber Defense - Systems & Netowrks").
+  //
+  // Order here is the column order. Anything whose prefix matches nothing
+  // falls into the last column, so a new prefix shows up somewhere visible
+  // instead of vanishing.
+  const CATEGORIES = [
+    { key: 'specialty', label: 'Spécialité', test: /^ESE\.(CCE|WIN|AC|INFRES)/i },
+    { key: 'core', label: 'Tronc commun', test: /^ESE\.SCI-M/i },
+    { key: 'technical', label: 'Technique', test: /^ESE\.(BD|AS|SR|MS|DS|INFDEV|INFWEB)/i },
+    { key: 'other', label: 'Autres', test: null },
+  ];
+
+  function categoryOf(code) {
+    const hit = CATEGORIES.find((c) => c.test && c.test.test(code));
+    return (hit || CATEGORIES[CATEGORIES.length - 1]).key;
+  }
+
   if (!COURSE_LIST_RE.test(location.pathname)) return;
   if (!document.documentElement.classList.contains('bbm-takeover')) return;
 
@@ -138,42 +159,32 @@
     return { me, courses, termById };
   }
 
-  function groupByTerm(courses, termById) {
-    const groups = new Map();
-    for (const course of courses) {
+  // Courses still drop out by term first — hiding Semestre 2 is a separate,
+  // deliberate setting (HIDDEN_TERM_PATTERNS) and grouping by subject does
+  // not change what you want to see this semester.
+  function groupByCategory(courses, termById) {
+    const visible = courses.filter((course) => {
       const term = termById.get(course.termId);
-      const name = (term && term.name) || 'Autres cours';
-      if (HIDDEN_TERM_PATTERNS.some((re) => re.test(name))) continue;
-      if (!groups.has(name)) groups.set(name, { name, start: term && term.startDate, courses: [] });
-      groups.get(name).courses.push(course);
-    }
-    for (const group of groups.values()) {
-      group.courses.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
-    }
-    // Newest term first; terms with no start date sink to the bottom.
-    return [...groups.values()].sort((a, b) => {
-      if (a.start && b.start) return Date.parse(b.start) - Date.parse(a.start);
-      if (a.start) return -1;
-      if (b.start) return 1;
-      return a.name.localeCompare(b.name, 'fr');
+      const name = (term && term.name) || '';
+      return !HIDDEN_TERM_PATTERNS.some((re) => re.test(name));
     });
+
+    return CATEGORIES.map((category) => ({
+      ...category,
+      courses: visible
+        .filter((course) => categoryOf(course.code) === category.key)
+        .sort((a, b) => a.title.localeCompare(b.title, 'fr')),
+    }));
   }
 
   // ------------------------------------------------------------------ views
 
+  // No banner. With the courses split into four narrow columns there is no
+  // room for a 248px-wide gradient, and the column heading already says what
+  // kind of course this is — the thumbnail was carrying no information the
+  // rest of the card did not.
   function courseCard(course) {
-    const [c1, c2] = BBM.pairFor(course.title);
     const seen = relativeTime(course.lastAccessed);
-
-    // Gradient only, no text. content.js has to burn the course name into
-    // its canvas placeholder because it is replacing an image Blackboard
-    // already positioned; here the title sits in the body below, so printing
-    // it on the banner too would just say everything twice.
-    const banner = el('div', {
-      class: 'bbm-course-banner',
-      style: `background-image: linear-gradient(135deg, ${c1}, ${c2})`,
-      'aria-hidden': 'true',
-    });
 
     return el(
       'a',
@@ -182,26 +193,20 @@
         href: course.url,
         'data-search': `${course.title} ${course.code} ${course.group || ''}`.toLowerCase(),
       },
-      banner,
+      el('h3', { class: 'bbm-course-name', text: course.title }),
       el(
         'div',
-        { class: 'bbm-course-body' },
-        el('h3', { class: 'bbm-course-name', text: course.title }),
-        el(
-          'div',
-          { class: 'bbm-course-meta' },
-          el('span', { class: 'bbm-chip', text: course.code }),
-          course.group && el('span', { class: 'bbm-chip bbm-chip-dim', text: course.group }),
-          !course.available && el('span', { class: 'bbm-chip bbm-chip-warn', text: 'Indisponible' })
-        ),
-        seen && el('p', { class: 'bbm-course-seen', text: `Consulté ${seen}` })
-      )
+        { class: 'bbm-course-meta' },
+        el('span', { class: 'bbm-chip', text: course.code }),
+        !course.available && el('span', { class: 'bbm-chip bbm-chip-warn', text: 'Indisponible' })
+      ),
+      seen && el('p', { class: 'bbm-course-seen', text: `Consulté ${seen}` })
     );
   }
 
   function render({ me, courses, termById }) {
-    const groups = groupByTerm(courses, termById);
-    const visible = groups.reduce((n, g) => n + g.courses.length, 0);
+    const columns = groupByCategory(courses, termById);
+    const visible = columns.reduce((n, c) => n + c.courses.length, 0);
     const given = (me.name && me.name.given) || '';
 
     const search = el('input', {
@@ -217,14 +222,19 @@
       text: `${visible} cours`,
     });
 
-    const sections = groups.map((group) =>
+    // One column per category. A column with nothing in it still renders its
+    // heading, so the four columns stay aligned across the page instead of
+    // reflowing when a category happens to be empty this semester.
+    const sections = columns.map((column) =>
       el(
         'section',
-        { class: 'bbm-term' },
-        el('h2', { class: 'bbm-term-name', text: group.name }),
-        el('div', { class: 'bbm-grid' }, ...group.courses.map(courseCard))
+        { class: 'bbm-col' },
+        el('h2', { class: 'bbm-col-name', text: column.label }),
+        el('div', { class: 'bbm-col-body' }, ...column.courses.map(courseCard))
       )
     );
+
+    const board = el('div', { class: 'bbm-columns' }, ...sections);
 
     const empty = el('p', { class: 'bbm-empty', hidden: '', text: 'Aucun cours ne correspond.' });
 
@@ -240,7 +250,7 @@
           card.classList.toggle('bbm-filtered-out', !hit);
           if (hit) inSection++;
         }
-        section.hidden = inSection === 0;
+        section.classList.toggle('bbm-col-empty', inSection === 0);
         shown += inSection;
       }
       count.textContent = q ? `${shown} sur ${visible} cours` : `${visible} cours`;
@@ -272,7 +282,7 @@
           })
         )
       ),
-      ...sections,
+      board,
       empty
     );
 
