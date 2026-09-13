@@ -51,8 +51,17 @@
     return (hit || CATEGORIES[CATEGORIES.length - 1]).key;
   }
 
-  if (!COURSE_LIST_RE.test(location.pathname)) return;
-  if (!document.documentElement.classList.contains('bbm-takeover')) return;
+  function bypassed() {
+    try {
+      return sessionStorage.getItem(BYPASS_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function shouldRun() {
+    return COURSE_LIST_RE.test(location.pathname) && !bypassed();
+  }
 
   // ---------------------------------------------------------------- helpers
 
@@ -316,8 +325,39 @@
     finishBoot();
   }
 
-  load().then(render).catch((err) => {
-    console.error('[bbm] course list takeover failed:', err);
-    renderError(err);
-  });
+  let started = false;
+
+  function activate() {
+    if (started || !shouldRun()) return;
+    started = true;
+    // boot.js normally sets this at document_start; set it here too for the
+    // SPA case below, where boot.js never ran for this URL.
+    document.documentElement.classList.add('bbm-takeover');
+
+    load().then(render).catch((err) => {
+      console.error('[bbm] course list takeover failed:', err);
+      renderError(err);
+    });
+  }
+
+  activate();
+
+  // Arriving by SPA route change. Content scripts are injected once per real
+  // navigation, so clicking "Cours" in Blackboard's own sidebar from another
+  // Ultra page pushState's to /ultra/course without boot.js — or any of
+  // this — ever running again for that URL. Without the watcher below you
+  // get the old reskin and no way to tell why.
+  //
+  // Firefox content scripts live in an isolated world, so patching
+  // history.pushState from here would only patch our own wrapper and never
+  // see Blackboard's calls. Polling the URL is the thing that actually works
+  // across the boundary; at 400ms it costs nothing measurable.
+  window.addEventListener('popstate', activate);
+
+  let lastPath = location.pathname;
+  setInterval(() => {
+    if (location.pathname === lastPath) return;
+    lastPath = location.pathname;
+    activate();
+  }, 400);
 })();

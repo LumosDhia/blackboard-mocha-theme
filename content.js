@@ -290,6 +290,12 @@
   // has no shadow roots at all — the walk is a safety net for other Ultra
   // pages, so run it once at startup and keep the hot path to querySelectorAll.
   function fullScan() {
+    // courselist.js can take the page over *after* this script has already
+    // run, when the course list is reached by SPA route change. Everything
+    // below queries Blackboard's markup, which by then is gone — so stop
+    // rather than keep waking on our own DOM's mutations.
+    if (document.documentElement.classList.contains('bbm-takeover')) return;
+
     hideTerms(document);
     scanForCards(document);
     hideToolbarExceptSearch(document);

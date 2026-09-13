@@ -19,6 +19,10 @@ of its own and doesn't touch anyone else's view of the site.
 2. Click **Load Temporary Add-on…**.
 3. Select `manifest.json` from this folder.
 
+After editing any file, press **Reload** next to the add-on on that page —
+a temporary add-on does not pick up changes on its own, and the page will
+keep running the version you first loaded.
+
 This lasts until Firefox restarts. To make it permanent, either:
 - Package it as a signed `.xpi` via [addons.mozilla.org](https://addons.mozilla.org)
   (can be unlisted/self-distributed), or
@@ -159,6 +163,13 @@ items, but `dueDate → endDate → startDate` and `calendarName`-as-course come
 from Blackboard's published schema, not from a response. Check them the first
 time something is actually due.
 
+**Reaching the page.** The takeover runs both on a direct load of
+`/ultra/course` and on an SPA route change into it — clicking "Cours" in
+Blackboard's own sidebar from another Ultra page. The second case needs a
+URL poll rather than a `history.pushState` patch: Firefox content scripts run
+in an isolated world, so patching `pushState` from `courselist.js` would only
+patch our own wrapper and never see Blackboard's own calls.
+
 **Escape hatch.** The "Blackboard d'origine" button reloads the page with the
 takeover off, so the original course list comes back reskinned as before. It
 sets `sessionStorage['bbm.bypass'] = '1'` and lasts until the tab is closed.
@@ -231,12 +242,6 @@ button back; until then, sign out by clearing the site's cookies.
 
 ## Known limitations
 
-- **The takeover only applies on a full page load.** Content scripts are
-  injected on navigation, not on an SPA route change, so reaching the course
-  list by clicking "Cours" in Blackboard's own sidebar from another Ultra page
-  gives you Blackboard's list, reskinned the old way. Loading
-  `/ultra/course` directly, or reloading, gets the rebuilt one. Fixing this
-  means watching for `pushState` and running the takeover on demand.
 - **Closed shadow DOM.** If any part of Blackboard Ultra's UI uses *closed*
   shadow roots, neither `mocha.css` nor `content.js` can reach inside them —
   this is a hard platform limitation, not a bug here.

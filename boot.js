@@ -31,16 +31,36 @@
 
   if (!COURSE_LIST_RE.test(location.pathname) || bypassed()) return;
 
-  const root = document.documentElement;
-  root.classList.add('bbm-takeover', 'bbm-booting');
+  function mark() {
+    const root = document.documentElement;
+    root.classList.add('bbm-takeover', 'bbm-booting');
 
-  // courselist.css arrives at document_idle, far too late to hide the first
-  // paint, so the hiding rule is inlined here. visibility rather than display
-  // so Blackboard's own layout still settles underneath.
-  const style = document.createElement('style');
-  style.id = 'bbm-boot-style';
-  style.textContent = 'html.bbm-booting body { visibility: hidden !important; }';
-  root.appendChild(style);
+    // courselist.css arrives at document_idle, far too late to hide the
+    // first paint, so the hiding rule is inlined here. visibility rather
+    // than display so Blackboard's own layout still settles underneath.
+    const style = document.createElement('style');
+    style.id = 'bbm-boot-style';
+    style.textContent = 'html.bbm-booting body { visibility: hidden !important; }';
+    root.appendChild(style);
 
-  setTimeout(() => root.classList.remove('bbm-booting'), 8000);
+    setTimeout(() => root.classList.remove('bbm-booting'), 8000);
+  }
+
+  // Firefox runs document_start content scripts *before* the parser has
+  // created <html>, so document.documentElement is frequently null right
+  // here — and reading .classList off null throws, killing this script
+  // silently. When that happens no marker is ever set, courselist.js bails,
+  // and the page falls back to the plain reskin with no visible error.
+  // Chrome usually has documentElement by now, which is exactly why this
+  // survived testing there.
+  if (document.documentElement) {
+    mark();
+  } else {
+    const waiting = new MutationObserver(() => {
+      if (!document.documentElement) return;
+      waiting.disconnect();
+      mark();
+    });
+    waiting.observe(document, { childList: true });
+  }
 })();

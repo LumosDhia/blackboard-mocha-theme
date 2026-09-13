@@ -243,6 +243,35 @@ included. Anything matching on names will break on that one.
 `ESE.SCI-M03 "Machine Learning avancé"` sits in Tronc commun by its prefix
 though it is really a data/ML course; that is the one genuine straddle.
 
+### Two bugs that made the takeover silently not happen
+
+Both were found after loading the extension for real in Firefox for the first
+time; both produce the *same* symptom — the plain reskin, no error anywhere —
+and neither reproduces in Chromium, which is how the earlier
+inject-into-the-page verification missed them.
+
+1. **`document.documentElement` is null at `document_start` in Firefox.**
+   The parser has not created `<html>` yet, so `root.classList.add(...)` in
+   `boot.js` threw `TypeError: Cannot read properties of null`, the script
+   died, no `.bbm-takeover` marker was ever set, and `courselist.js` bailed
+   by design. Chrome usually *does* have documentElement by then. `boot.js`
+   now waits on a `MutationObserver` when it is missing. Verified by running
+   both the old and new code against
+   `document.implementation.createDocument(null, null, null)`.
+
+2. **SPA arrivals never ran the takeover.** Content scripts are injected once
+   per real navigation, so clicking "Cours" in Blackboard's own sidebar
+   pushState'd to `/ultra/course` without re-running anything.
+   `courselist.js` now watches for it. Note it **polls** `location.pathname`
+   rather than patching `history.pushState`: Firefox content scripts are in
+   an isolated world, so a patched `pushState` would only ever see our own
+   calls, never Blackboard's. Verified live — idle on `/ultra/stream`, fires
+   within one 400ms tick of a pushState to `/ultra/course`.
+
+`content.js` also got a guard: `fullScan()` now returns early if the marker
+is present, so after an SPA takeover it stops rescanning a DOM that no longer
+contains any Blackboard markup.
+
 ### Navigation rail (rail.js)
 
 Blackboard's primary nav, rebuilt down the left edge of the taken-over list.
