@@ -166,6 +166,47 @@
     processedCards.add(card);
   }
 
+  // Blackboard's "N resultats" chip. It is React/JSS — a different stack
+  // from the AngularJS course list — so it keeps counting the courses we
+  // hide. The JSS suffix (chipResultGroup-0-2-131) changes between builds,
+  // so match the stable part only.
+  const RESULT_COUNT_SELECTOR = '[class*="chipResultGroup" i]';
+  // Digits plus the separators a localised number may use. Deliberately no
+  // \s — that would swallow the space before "resultats" and render
+  // "18resultats".
+  const RESULT_NUMBER_RE = /\d+(?:[.,\u00a0\u202f]\d+)*/;
+
+  let resultTotal = null; // Blackboard's own figure, before we touch it
+  let resultTemplate = null; // its full string, so the label/locale survives
+  let resultWritten = null; // what we last wrote, to spot a React re-render
+
+  function hiddenCardCount() {
+    return document.querySelectorAll(
+      '.bbm-hidden-term .course-element-card, .bbm-hidden-term.course-element-card'
+    ).length;
+  }
+
+  function updateResultCount() {
+    const el = document.querySelector(RESULT_COUNT_SELECTOR);
+    if (!el) return;
+
+    const text = el.textContent;
+    // Anything we didn't write is a fresh figure from Blackboard (first
+    // paint, or a re-render after a filter change) — re-read the total.
+    if (text !== resultWritten) {
+      const match = text.match(RESULT_NUMBER_RE);
+      if (!match) return;
+      resultTotal = parseInt(match[0].replace(/\D/g, ''), 10);
+      resultTemplate = text;
+    }
+    if (resultTotal === null) return;
+
+    const visible = Math.max(0, resultTotal - hiddenCardCount());
+    const next = resultTemplate.replace(RESULT_NUMBER_RE, String(visible));
+    if (el.textContent !== next) el.textContent = next;
+    resultWritten = next;
+  }
+
   // The course list is a flat `.course-org-list`: a `.course-card-term-name`
   // header, then that term's cards as sibling `.default-group` divs, then
   // the next header. So a term is hidden by walking siblings from its header
@@ -227,6 +268,7 @@
   function fullScan() {
     hideTerms(document);
     scanForCards(document);
+    updateResultCount();
   }
 
   walkForShadowRoots(document.documentElement);
@@ -255,4 +297,19 @@
   });
   watched = observedRoot();
   observer.observe(watched, { childList: true, subtree: true });
+
+  // The counter lives outside `.course-org-list`, so the observer above
+  // never sees React re-render it. Watch just that small subtree. Our own
+  // write settles: the next fire sees the text we wrote, recomputes the
+  // same value, and writes nothing.
+  (function watchResultCount() {
+    const el = document.querySelector(RESULT_COUNT_SELECTOR);
+    const host = el && el.parentElement;
+    if (!host) return;
+    const countObserver = new MutationObserver(() => {
+      clearTimeout(countObserver._debounce);
+      countObserver._debounce = setTimeout(updateResultCount, 100);
+    });
+    countObserver.observe(host, { childList: true, subtree: true, characterData: true });
+  })();
 })();
