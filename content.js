@@ -145,6 +145,11 @@
 
   function applyPlaceholder(card) {
     if (processedCards.has(card)) return;
+    // Skip cards in a hidden term. Each placeholder is a canvas
+    // toDataURL('image/png') encode, which is not cheap — no point spending
+    // one on a card that is display:none. hideTerms() runs first in
+    // fullScan(), so the class is already set by the time we get here.
+    if (card.closest('.bbm-hidden-term')) return;
     const banner = findBanner(card);
     if (!banner) return;
 
@@ -213,17 +218,41 @@
     }
   }
 
+  // The shadow-root walk recurses over every element on the page. Running it
+  // on every mutation pegged the main thread hard enough to freeze the tab:
+  // Blackboard's AngularJS mutates the DOM constantly (lazy card binding,
+  // scrolling), so a debounce alone doesn't bound the work. The course list
+  // has no shadow roots at all — the walk is a safety net for other Ultra
+  // pages, so run it once at startup and keep the hot path to querySelectorAll.
   function fullScan() {
     hideTerms(document);
     scanForCards(document);
-    walkForShadowRoots(document.documentElement);
   }
 
+  walkForShadowRoots(document.documentElement);
   fullScan();
 
+  // Scope the observer to the course list once it exists. Watching
+  // documentElement means every unrelated Angular update on the page wakes
+  // the scan; the list container is the only subtree that matters here.
+  function observedRoot() {
+    return document.querySelector('.course-org-list') || document.documentElement;
+  }
+
+  let watched = null;
   const observer = new MutationObserver(() => {
     clearTimeout(observer._debounce);
-    observer._debounce = setTimeout(fullScan, 250);
+    observer._debounce = setTimeout(() => {
+      fullScan();
+      // Angular can replace the list wrapper; re-target if that happened.
+      const root = observedRoot();
+      if (root !== watched) {
+        watched = root;
+        observer.disconnect();
+        observer.observe(root, { childList: true, subtree: true });
+      }
+    }, 250);
   });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  watched = observedRoot();
+  observer.observe(watched, { childList: true, subtree: true });
 })();
