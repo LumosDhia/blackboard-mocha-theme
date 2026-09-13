@@ -124,6 +124,12 @@ button back; until then, sign out by clearing the site's cookies.
 
 ## Known limitations
 
+- **The takeover only applies on a full page load.** Content scripts are
+  injected on navigation, not on an SPA route change, so reaching the course
+  list by clicking "Cours" in Blackboard's own sidebar from another Ultra page
+  gives you Blackboard's list, reskinned the old way. Loading
+  `/ultra/course` directly, or reloading, gets the rebuilt one. Fixing this
+  means watching for `pushState` and running the takeover on demand.
 - **Closed shadow DOM.** If any part of Blackboard Ultra's UI uses *closed*
   shadow roots, neither `mocha.css` nor `content.js` can reach inside them —
   this is a hard platform limitation, not a bug here.
