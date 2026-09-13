@@ -14,78 +14,91 @@ Mocha-gradient canvas image).
 ## What's done
 
 - `manifest.json`, `mocha.css`, `content.js`, `README.md` — a working
-  Manifest V3 Firefox extension. Loadable now via
+  Manifest V3 Firefox extension. Loadable via
   `about:debugging#/runtime/this-firefox` → Load Temporary Add-on →
   `manifest.json`.
-- `mocha.css` recolors common elements (headers, nav, cards, buttons, links,
-  forms, alerts) using broad `[class*="..." i]` substring selectors.
-- `content.js` finds course cards, draws a placeholder thumbnail per card
-  (Mocha gradient + course name text, via `<canvas>` → data URL), and
-  injects `mocha.css` into any *open* shadow roots it finds. Re-scans on
-  DOM mutation (debounced) since Blackboard Ultra is an SPA.
+- **Selectors are now real.** They were verified against a live, logged-in
+  `esprit.blackboard.com` course list (Ultra, Sept 2026) — see below.
+- `mocha.css` recolors via broad `[class*="..." i]` selectors, plus a
+  pinned section for the exact Blackboard/Material-UI/JSS class names that
+  the broad rules missed.
+- `content.js` gives each course card a generated Mocha placeholder banner,
+  re-scanning on DOM mutation (debounced) since Ultra is an SPA.
 
-## The one open problem
+## The open problem — SOLVED
 
-All the selectors in `content.js` (`CARD_SELECTORS`, `IMAGE_SELECTORS`,
-`TITLE_SELECTORS`) are **best-effort guesses** — built without ever seeing
-the real, logged-in Blackboard Ultra markup. They may not match the actual
-course cards on `esprit.blackboard.com`.
+The old note here said every selector was a best-effort guess made without
+ever seeing the real logged-in markup. They have now been read off the live
+page, and two of the guesses were flat wrong:
 
-**To fix this**, we need the real class names. The plan (in progress):
+1. **A course card contains no `<img>` at all.** The thumbnail is a CSS
+   `background-image` on `div.course-banner` (Blackboard's defaults come
+   from `cloudfront.../default-banners/natureNN_thumb.jpg`). The old
+   `content.js` looked for an `<img>` and set `img.src`, so on the real site
+   it silently did nothing. Placeholders are now applied by overriding
+   `background-image` on the banner div.
+2. **No shadow DOM on the course list.** Every card is light DOM
+   (`shadowHosts === 0`). The shadow-root walk is kept only as a safety net
+   for other Ultra pages.
 
-1. Log into `esprit.blackboard.com`, go to the course list.
-2. Open DevTools console (`F12`), paste this snippet (only extracts tag
-   names + CSS classes — no course names/personal data):
+The real structure:
 
-   ```js
-   (function () {
-     const seen = new Set();
-     const out = [];
-     document.querySelectorAll('img').forEach((img) => {
-       const card = img.closest('li, article, [class*="card" i], [class*="tile" i], div');
-       if (!card || seen.has(card)) return;
-       seen.add(card);
-       const title = card.querySelector('h1,h2,h3,h4,[class*="title" i],[class*="name" i]');
-       out.push({
-         cardTag: card.tagName,
-         cardClass: card.className,
-         imgTag: img.tagName,
-         imgClass: img.className,
-         titleTag: title ? title.tagName : null,
-         titleClass: title ? title.className : null,
-       });
-     });
-     console.log(JSON.stringify(out.slice(0, 8), null, 2));
-   })();
-   ```
+```
+article.element-card.course-element-card.js-course-details.course-color-N
+├── div.course-banner              <- background-image = thumbnail
+│   ├── div.image-div
+│   └── div.guidance-overflow-wrapper
+└── div.element-details.summary
+    ├── div.small-12
+    ├── a.course-title.ellipsis
+    │   └── h4.js-course-title-element     <- course name
+    ├── div.multi-column-course-id
+    └── div.course-status
+```
 
-3. Give the printed JSON to Claude. It gets used only to hand-edit the
-   selector arrays at the top of `content.js` — the raw JSON itself is
-   never saved as a file or committed.
+Contrast bugs found and fixed while verifying (audited by scanning every
+visible element for text luminance < 110 against the dark background):
 
-## Dead end already ruled out (this machine)
+- `bdi.makeStylesbaseText-0-2-191` ×20 — JSS, hardcoded `rgb(38,38,38)`.
+  `bdi` was not in the stylesheet's text-element list. The numeric suffix
+  changes between Blackboard builds, so `mocha.css` matches the stable
+  `[class*="makeStyles" i]` prefix instead.
+- `div.MuiSelect-select.MuiInputBase-input` ×2 — Material-UI renders selects
+  as `<div>`, so `body select { }` never reached them.
 
-Tried using the "Claude in Chrome" extension (in Brave) to have Claude
-inspect the live page directly instead of the manual console-snippet route.
-Installed + enabled the extension, ran `/chrome` several times including
-after a full Claude Code restart — no browser-automation tools ever became
-available. Checked the Windows registry
-(`HKCU\Software\{BraveSoftware\Brave-Browser,Google\Chrome}\NativeMessagingHosts`)
-and found no Anthropic/Claude entry was ever registered.
+After those rules the audit reports **0** dark-on-dark elements.
 
-This machine is **Windows on ARM64** (reports AMD64 for app compatibility,
-but the actual CPU/OS is ARM64) — likely cause is the native-messaging-host
-connector binary not being shipped for ARM64 Windows (unconfirmed/
-undocumented, flagged as feedback). **Worth retrying on an x64 machine** —
-it may just work there. If it does, that's a faster path to fixing the
-selectors than the manual console-snippet route above.
+## Dead end — no longer a dead end
+
+The earlier attempt to use the "Claude in Chrome" extension to inspect the
+live page failed on the original machine (Windows on ARM64): the tools never
+became available, and no native-messaging host was ever registered. That was
+flagged as likely an ARM64 Windows packaging gap.
+
+**Retried on a Linux x86_64 machine with Brave 153 — it works.** Confirmed
+via `navigator.brave.isBrave === true` and UA-CH brands reporting
+`Brave 153 / Chromium 153`. That is how the selectors above were recovered,
+so the manual DevTools-console-snippet route in the old notes is no longer
+needed. If picking this up on the Windows ARM64 machine again, expect the
+old failure and use a Linux/x64 box instead.
+
+## Still untested
+
+- The extension has only been verified by injecting its CSS/JS into a live
+  page through browser automation, i.e. in a Chromium browser. It has not
+  been loaded as an actual Firefox temporary add-on against the live site.
+  `content.js` uses `browser.runtime.getURL`, which is Firefox-correct but
+  was stubbed out during that verification.
+- Only the course-list page (`/ultra/course`) was inspected. The
+  institution page, course interiors, Calendar, Messages and Grades are
+  unverified.
+- List view (the list/grid toggle at the top left of the course list) was
+  not checked — it may not render `.course-banner` at all.
 
 ## Repo / account notes
 
 - GitHub: `LumosDhia/blackboard-mocha-theme`, pushed to `main`.
-- On the original machine, this lives under
-  `~/Github/LumosDhia/blackboard-mocha-theme` — gh/git are scoped to the
-  `LumosDhia` GitHub account automatically for anything under
-  `~/Github/LumosDhia/` (see that folder's own CLAUDE.md for the account
-  rules: 5-word max commit subjects, never open a PR, commit straight to
-  `main`).
+- Lives under `~/Github/LumosDhia/blackboard-mocha-theme` — gh/git are
+  scoped to the `LumosDhia` account automatically for anything under
+  `~/Github/LumosDhia/` (see that folder's own CLAUDE.md: 5-word max commit
+  subjects, never open a PR, commit straight to `main`).

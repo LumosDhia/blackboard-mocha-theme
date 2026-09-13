@@ -2,43 +2,39 @@
 //
 // Two jobs:
 //   1. Push mocha.css into every *open* shadow root on the page (a plain
-//      <link>/manifest CSS injection only reaches the light DOM; Blackboard
-//      Ultra's custom elements may use shadow DOM, open or closed — closed
-//      roots are simply unreachable from a content script, no way around it).
-//   2. Find course cards on the dashboard/course-list and replace their
-//      thumbnail image with a generated placeholder: a Catppuccin Mocha
-//      gradient with the course's name drawn on it.
+//      <link>/manifest CSS injection only reaches the light DOM).
+//   2. Find course cards on the course list and give each one a generated
+//      placeholder banner: a Catppuccin Mocha gradient with the course's
+//      name drawn on it.
 //
-// Blackboard's exact markup wasn't inspected against a live logged-in
-// session, so every selector below is a broad, case-insensitive substring
-// match rather than an exact class name. If a real course card isn't
-// picked up, inspect it in Firefox DevTools and add/adjust a selector in
-// CARD_SELECTORS or IMAGE_SELECTORS below.
+// Selectors below were read off a live, logged-in esprit.blackboard.com
+// course list (Ultra, 2026-09), not guessed. Two things about that markup
+// drive the implementation:
+//
+//   * A course card has NO <img>. The thumbnail is a CSS background-image
+//     on `.course-banner` (Blackboard's own default banners are served
+//     from cloudfront as .../default-banners/natureNN_thumb.jpg). So the
+//     placeholder is applied by overriding background-image, not img.src.
+//   * No shadow DOM is used on the course list — every card is in the
+//     light DOM. The shadow-root walk is kept as a cheap safety net for
+//     other Ultra pages that may differ.
 
 (() => {
+  // article.element-card.course-element-card ... js-course-details
   const CARD_SELECTORS = [
-    '[class*="course-card" i]',
-    '[class*="coursecard" i]',
-    '[data-testid*="course-card" i]',
-    '[data-testid*="course_card" i]',
-    '[class*="course-list" i] li',
-    '[class*="course-tile" i]',
+    'article.course-element-card',
+    '.course-element-card',
+    '.js-course-details',
   ];
 
-  const IMAGE_SELECTORS = [
-    'img[class*="thumbnail" i]',
-    'img[class*="banner" i]',
-    'img[class*="cover" i]',
-    'img',
-  ];
+  // The banner div whose background-image is the course thumbnail.
+  const BANNER_SELECTORS = ['.course-banner'];
 
+  // h4.js-course-title-element, inside a.course-title
   const TITLE_SELECTORS = [
-    '[class*="title" i]',
-    '[class*="name" i]',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
+    'h4.js-course-title-element',
+    '.js-course-title-element',
+    '.course-title',
   ];
 
   const MOCHA_PAIRS = [
@@ -52,7 +48,10 @@
   ];
 
   const CRUST = '#11111b';
-  const TEXT = '#cdd6f4';
+
+  // Banner box on the real page is ~349x128 CSS px; draw at 2x for HiDPI.
+  const BANNER_W = 698;
+  const BANNER_H = 256;
 
   const processedCards = new WeakSet();
   const processedRoots = new WeakSet();
@@ -84,7 +83,7 @@
     return lines.slice(0, 3);
   }
 
-  function makePlaceholderDataUrl(label, width = 480, height = 270) {
+  function makePlaceholderDataUrl(label, width = BANNER_W, height = BANNER_H) {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -99,25 +98,21 @@
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle base/crust panel behind the text for contrast, regardless of
-    // which two accent colors the gradient picked.
+    // Crust scrim behind the text so the title stays legible whichever two
+    // accent colors the gradient picked.
     ctx.fillStyle = 'rgba(17, 17, 27, 0.35)';
-    ctx.fillRect(0, height * 0.62, width, height * 0.38);
+    ctx.fillRect(0, height * 0.55, width, height * 0.45);
 
     ctx.fillStyle = CRUST;
-    ctx.font = 'bold 28px "Segoe UI", sans-serif';
+    ctx.font = 'bold 38px "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const lines = wrapText(ctx, text, width - 40);
-    const lineHeight = 34;
-    const startY = height - 24 - (lines.length - 1) * lineHeight - 12;
+    const lines = wrapText(ctx, text, width - 60);
+    const lineHeight = 46;
+    const startY = height - 34 - (lines.length - 1) * lineHeight - 14;
     lines.forEach((line, i) => {
       ctx.fillText(line, width / 2, startY + i * lineHeight);
     });
-
-    ctx.fillStyle = TEXT;
-    ctx.font = '600 14px "Segoe UI", sans-serif';
-    ctx.fillText('placeholder thumbnail', width / 2, 22);
 
     return canvas.toDataURL('image/png');
   }
@@ -130,27 +125,32 @@
     }
     const aria = card.getAttribute('aria-label');
     if (aria && aria.trim()) return aria.trim();
-    const text = card.textContent && card.textContent.trim();
-    return text ? text.slice(0, 60) : 'Course';
+    return 'Course';
   }
 
-  function findImage(card) {
-    for (const sel of IMAGE_SELECTORS) {
-      const img = card.querySelector(sel);
-      if (img) return img;
+  function findBanner(card) {
+    for (const sel of BANNER_SELECTORS) {
+      const el = card.querySelector(sel);
+      if (el) return el;
     }
     return null;
   }
 
   function applyPlaceholder(card) {
     if (processedCards.has(card)) return;
-    const img = findImage(card);
-    if (!img) return;
+    const banner = findBanner(card);
+    if (!banner) return;
 
     const title = findTitle(card);
-    img.src = makePlaceholderDataUrl(title);
-    img.srcset = '';
-    img.classList.add('bbm-thumb-placeholder');
+    // Bail until the SPA has actually rendered the title, otherwise every
+    // card gets an identical "Course" placeholder on first paint.
+    if (title === 'Course') return;
+
+    banner.style.setProperty('background-image', `url("${makePlaceholderDataUrl(title)}")`, 'important');
+    banner.style.setProperty('background-size', 'cover', 'important');
+    banner.style.setProperty('background-position', 'center', 'important');
+    banner.style.setProperty('background-repeat', 'no-repeat', 'important');
+    banner.classList.add('bbm-thumb-placeholder');
     processedCards.add(card);
   }
 
