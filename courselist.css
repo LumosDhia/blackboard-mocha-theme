@@ -172,7 +172,8 @@ body.bbm-takeover-body {
 .bbm-app .bbm-course {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  align-items: flex-start;
+  gap: 8px;
   padding: 13px 14px;
   text-decoration: none;
   background-color: var(--ctp-mantle, #181825);
@@ -189,39 +190,25 @@ body.bbm-takeover-body {
   display: none;
 }
 
+/* The whole card. Nothing is clamped or ellipsised — a long course name
+ * wraps and the card grows, because a truncated name is exactly the thing
+ * this layout exists to avoid. */
 .bbm-app .bbm-course-name {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.4;
   color: var(--ctp-text, #cdd6f4);
 }
 
-.bbm-app .bbm-course-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.bbm-app .bbm-chip {
+.bbm-app .bbm-chip-warn {
   padding: 3px 8px;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--ctp-subtext0, #a6adc8);
-  background-color: var(--ctp-surface0, #313244);
-  border-radius: 5px;
-}
-
-.bbm-app .bbm-chip-warn {
   color: var(--ctp-crust, #11111b);
   background-color: var(--ctp-peach, #fab387);
-}
-
-.bbm-app .bbm-course-seen {
-  margin: 0;
-  font-size: 11px;
-  color: var(--ctp-overlay0, #6c7086);
+  border-radius: 5px;
 }
 
 /* ------------------------------------------------------ empty and failure */

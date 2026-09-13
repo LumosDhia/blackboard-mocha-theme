@@ -47,10 +47,20 @@ per Blackboard build, AngularJS binding course titles after first paint, the
 dark-on-dark contrast audit. The REST shapes are versioned and move far more
 slowly than the markup.
 
-What the page gives you: courses split into four columns by subject, a live
-search box, the course code as a chip, and a "consulté il y a…" line from each
-membership's `lastAccessed` (which Blackboard's own card grid never shows).
-Clicking a course is a real navigation into the real Blackboard UI.
+What the page gives you: courses split into four columns by subject and a
+live search box. A card is the course's full name and nothing else — no
+thumbnail, no code chip, no last-accessed line. The name is never truncated;
+a long one wraps and the card grows. Clicking a course is a real navigation
+into the real Blackboard UI.
+
+The code and class group are still searchable even though neither is
+displayed, so typing `SCI-M03` or `4CCE14` finds the course. The one thing a
+card will still show besides the name is an "Indisponible" tag, since
+otherwise it would be a link that quietly goes nowhere.
+
+Note the displayed name has Esprit's `__4CCE14` class-group suffix stripped
+(`BBM.splitGroup` in `shared.js`). Drop that call in `courseCard` if you want
+Blackboard's raw name instead.
 
 ### The four columns
 

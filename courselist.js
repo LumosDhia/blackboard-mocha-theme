@@ -89,24 +89,6 @@
     return res.json();
   }
 
-  // "il y a 3 j" etc. Blackboard reports lastAccessed per membership, which
-  // is genuinely useful for ordering a 29-course list and which its own card
-  // grid never surfaces.
-  function relativeTime(iso) {
-    if (!iso) return null;
-    const then = Date.parse(iso);
-    if (Number.isNaN(then)) return null;
-    const mins = Math.round((Date.now() - then) / 60000);
-    if (mins < 1) return "à l'instant";
-    if (mins < 60) return `il y a ${mins} min`;
-    const hours = Math.round(mins / 60);
-    if (hours < 24) return `il y a ${hours} h`;
-    const days = Math.round(hours / 24);
-    if (days < 30) return `il y a ${days} j`;
-    const months = Math.round(days / 30);
-    return `il y a ${months} mois`;
-  }
-
   function bypassToOriginal() {
     try {
       sessionStorage.setItem(BYPASS_KEY, '1');
@@ -149,7 +131,6 @@
           code: code.label,
           termId: m.course.termId,
           role: m.courseRoleId,
-          lastAccessed: m.lastAccessed,
           available: !m.course.availability || m.course.availability.available === 'Yes',
           // Blackboard hands us the canonical deep link; no need to build one.
           url: m.course.externalAccessUrl || `${ORIGIN}/ultra/courses/${m.course.id}/outline`,
@@ -179,28 +160,25 @@
 
   // ------------------------------------------------------------------ views
 
-  // No banner. With the courses split into four narrow columns there is no
-  // room for a 248px-wide gradient, and the column heading already says what
-  // kind of course this is — the thumbnail was carrying no information the
-  // rest of the card did not.
+  // Name only. No banner, no code chip, no last-accessed line — the column
+  // heading already says what kind of course this is, and anything else in
+  // the card was competing with the one thing you actually read.
+  //
+  // The code and class group stay in data-search even though neither is
+  // shown, so searching "SCI-M03" or "4CCE14" still finds the course.
   function courseCard(course) {
-    const seen = relativeTime(course.lastAccessed);
-
     return el(
       'a',
       {
         class: 'bbm-course',
         href: course.url,
         'data-search': `${course.title} ${course.code} ${course.group || ''}`.toLowerCase(),
+        title: course.available ? null : 'Cours indisponible',
       },
       el('h3', { class: 'bbm-course-name', text: course.title }),
-      el(
-        'div',
-        { class: 'bbm-course-meta' },
-        el('span', { class: 'bbm-chip', text: course.code }),
-        !course.available && el('span', { class: 'bbm-chip bbm-chip-warn', text: 'Indisponible' })
-      ),
-      seen && el('p', { class: 'bbm-course-seen', text: `Consulté ${seen}` })
+      // The one exception: an unavailable course still has to say so, or the
+      // card is a link that quietly goes nowhere useful.
+      !course.available && el('span', { class: 'bbm-chip bbm-chip-warn', text: 'Indisponible' })
     );
   }
 
