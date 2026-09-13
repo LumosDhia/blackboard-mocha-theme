@@ -32,7 +32,8 @@ body.bbm-takeover-body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 28px 72px;
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* Mono throughout, as on rose-startpage — not just for the heading. */
+  font-family: var(--bbm-mono);
 }
 
 .bbm-app *,
@@ -77,6 +78,10 @@ body.bbm-takeover-body {
  * That is not a shortcoming of the subset: JetBrains Mono has no CJK
  * coverage to begin with, so the startpage resolves those characters the
  * same way. */
+:root {
+  --bbm-mono: "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
+}
+
 @font-face {
   font-family: "JetBrainsMonoNLNerdFontMono";
   src: url("fonts/JetBrainsMonoNLNerdFontMono-Regular.subset.woff2") format("woff2");
@@ -87,7 +92,7 @@ body.bbm-takeover-body {
 
 .bbm-app .bbm-hello {
   margin: 0;
-  font-family: "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
+  font-family: var(--bbm-mono);
   font-size: 30px;
   font-weight: normal;
   color: var(--ctp-mauve, #cba6f7);
@@ -97,6 +102,7 @@ body.bbm-takeover-body {
   width: 260px;
   padding: 9px 13px;
   font: inherit;
+  font-family: var(--bbm-mono);
   font-size: 14px;
   color: var(--ctp-text, #cdd6f4);
   background-color: var(--ctp-mantle, #181825);
@@ -117,6 +123,7 @@ body.bbm-takeover-body {
 .bbm-app .bbm-escape {
   padding: 9px 14px;
   font: inherit;
+  font-family: var(--bbm-mono);
   font-size: 13px;
   color: var(--ctp-subtext0, #a6adc8);
   background-color: transparent;
@@ -169,10 +176,12 @@ body.bbm-takeover-body {
   color: var(--ctp-rosewater, #f5e0dc);
 }
 
+/* Indented under its title, exactly as the startpage indents `ul`. No gap
+ * between entries: they are lines of a list, spaced by line-height. */
 .bbm-app .bbm-col-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  padding-left: 1em;
 }
 
 /* A column filtered down to nothing keeps its heading so the other three
@@ -183,47 +192,65 @@ body.bbm-takeover-body {
 
 /* ------------------------------------------------------------------ course */
 
-/* Text only — no banner. See courseCard() in courselist.js. */
+/* Plain text lines, not cards — the startpage's `li > a` treatment: no
+ * background, no border, and the hover state is a mauve "> " marker sliding
+ * in from the left with the row nudged 4px across.
+ *
+ * The marker is positioned at `right: 100%` so it hangs in the 1em of
+ * indent on .bbm-col-body rather than reflowing the text when it appears.
+ *
+ * Course names wrap — unlike the startpage's short link labels, which are
+ * `white-space: nowrap`. "access control and identity management" in a
+ * quarter-width column has to break somewhere. */
 .bbm-app .bbm-course {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 13px 14px;
+  position: relative;
+  display: block;
+  padding: 3px 0;
   text-decoration: none;
-  background-color: var(--ctp-mantle, #181825);
-  border: 1px solid var(--ctp-surface0, #313244);
-  border-radius: 10px;
-  transition: border-color 140ms ease;
+  color: var(--ctp-text, #cdd6f4);
+  transition: transform 0.15s ease, color 0.2s ease;
+}
+
+.bbm-app .bbm-course::before {
+  content: "> ";
+  position: absolute;
+  right: 100%;
+  opacity: 0;
+  color: var(--ctp-mauve, #cba6f7);
+  transition: opacity 0.15s ease;
 }
 
 .bbm-app .bbm-course:hover {
-  border-color: var(--ctp-surface2, #585b70);
+  transform: translateX(4px);
+  color: var(--ctp-rosewater, #f5e0dc);
+}
+
+.bbm-app .bbm-course:hover::before {
+  opacity: 1;
+}
+
+.bbm-app .bbm-course:focus-visible {
+  outline: 2px solid var(--ctp-mauve, #cba6f7);
+  outline-offset: 2px;
 }
 
 .bbm-app .bbm-course.bbm-filtered-out {
   display: none;
 }
 
-/* The whole card. Nothing is clamped or ellipsised — a long course name
- * wraps and the card grows, because a truncated name is exactly the thing
- * this layout exists to avoid. */
 .bbm-app .bbm-course-name {
+  display: inline;
   margin: 0;
   font-size: 14px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--ctp-text, #cdd6f4);
+  font-weight: normal;
+  line-height: 1.5;
+  color: inherit;
 }
 
 .bbm-app .bbm-chip-warn {
-  padding: 3px 8px;
+  margin-left: 0.5em;
   font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--ctp-crust, #11111b);
-  background-color: var(--ctp-peach, #fab387);
-  border-radius: 5px;
+  color: var(--ctp-peach, #fab387);
 }
 
 /* ------------------------------------------------------ empty and failure */

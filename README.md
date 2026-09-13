@@ -107,9 +107,18 @@ under it — weight and the rosewater accent carry it, exactly as
 first — hiding Semestre 2 is a separate setting, and grouping by subject
 doesn't change which semester you want on screen.
 
-Cards carry no thumbnail. In a quarter-width column there is no room for a
-gradient banner, and the column heading already says what kind of course it
-is. `BBM.pairFor` is still used by `content.js` for the reskinned pages.
+Entries are plain text lines, not cards — the startpage's `li > a`
+treatment. No background, no border; hovering slides a mauve `> ` marker in
+from the left and nudges the row 4px across, and the whole page is set in the
+JetBrains Mono stack rather than just the heading.
+
+The marker sits at `right: 100%` so it hangs in the 1em of indent on the
+column body instead of reflowing the text when it appears. One deliberate
+departure: course names **wrap**, where the startpage's short link labels are
+`white-space: nowrap` — "access control and identity management" in a
+quarter-width column has to break somewhere.
+
+`BBM.pairFor` is now used only by `content.js`, for the reskinned pages.
 
 ### Navigation rail
 
