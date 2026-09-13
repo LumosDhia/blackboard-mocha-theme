@@ -272,6 +272,34 @@ inject-into-the-page verification missed them.
 is present, so after an SPA takeover it stops rescanning a DOM that no longer
 contains any Blackboard markup.
 
+### Chrome on the other Ultra pages (chrome.js)
+
+The dock and task drawer render on every `/ultra/*` page, with Blackboard's
+own sidebar hidden underneath. Verified live on course, calendar, stream,
+grades, messages, institution-page and tools — all seven resolve identically.
+
+- **The sidebar is `<base-side-menu>`**, 200px. A custom element, so the tag
+  *is* the selector and there is no JSS suffix to rot. The ancestor walk from
+  the nav links is kept only as a fallback.
+- **The page offset is `div.hide-in-background`**, whose `padding-left`
+  equals the sidebar width. Hiding the sidebar without zeroing this leaves
+  content pushed right by both it and the dock.
+- **Find it by walking UP from the content section, never by scanning the
+  document.** Scanning for "padding-left === sidebar width" looks equivalent
+  and is not: on `/ultra/stream` it also matches twenty
+  `div.stream-item-contents`, which merely happen to be padded 200px, and
+  flattening those wrecks the activity feed. Ancestors of the content are on
+  the offset path; its descendants never are. Confirmed after the fix: 0 of
+  20 stream items tagged.
+- The content anchor differs per page (`route-view-container`,
+  `js-base-activity-dashboard-container`, `base-messages-container`,
+  `institution-page-container`) but every one of them also carries
+  `js-base-page-skip-link-target`, which is what the selector chain leans on.
+- **The sidebar is React-rendered**, so it is frequently absent at
+  `document_idle`. chrome.js retries under a MutationObserver rather than
+  giving up on the first miss, and a 600ms watch re-applies after SPA route
+  changes, which rebuild the content container and drop the tag with it.
+
 ### Navigation rail (rail.js)
 
 Blackboard's primary nav, rebuilt down the left edge of the taken-over list.

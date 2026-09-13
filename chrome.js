@@ -40,25 +40,64 @@ var BBM_CHROME = (() => {
     return rail;
   }
 
-  // Walks up from the real nav links to whatever element contains all of
-  // them, and hides that. Derived from the live DOM each time rather than
-  // pinned to a selector, so it survives Blackboard reshuffling its markup —
-  // and returns null rather than hiding something wrong when it cannot find
-  // a container it is confident about.
+  // Blackboard's sidebar is <base-side-menu> — a custom element, so the tag
+  // itself is the selector and there is no JSS suffix to rot. The ancestor
+  // walk is the fallback for a build that ever drops that element: it climbs
+  // from the real nav links to the first element containing all of them.
   function findNativeNav() {
     const links = NAV_HREFS
       .map((path) => document.querySelector(`a[href$="${path}"]`))
       .filter(Boolean);
     if (links.length < 2) return null;
 
+    const menu = links[0].closest('base-side-menu');
+    if (menu) return menu;
+
     let node = links[0];
     while (node && node !== document.body) {
-      if (links.every((link) => node.contains(link))) {
-        // First ancestor holding them all. One level further up would start
-        // swallowing page content, so stop here.
+      if (links.every((link) => node.contains(link))) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  // Hiding the sidebar is only half of it: Blackboard offsets the page by
+  // the sidebar's width, and that offset has to go too, or content ends up
+  // pushed right by both it and the dock.
+  //
+  // The offset element is found by measuring, not by naming a class: walk up
+  // from the page's content section and take the first ancestor whose
+  // padding-left equals the sidebar's own width. Across
+  // course/calendar/stream/grades/messages/institution-page/tools that is
+  // always exactly one element (div.hide-in-background).
+  //
+  // The walk matters. Scanning the whole document for that padding instead
+  // looked equivalent and was not: on /ultra/stream it also matched twenty
+  // `div.stream-item-contents`, which merely happen to be padded 200px, and
+  // flattening those would have wrecked the activity feed. Ancestors of the
+  // content are on the offset path; its descendants never are.
+  const CONTENT_ANCHORS = [
+    '[class*="route-view-container" i]',
+    '[class*="skip-link-target" i]',
+    'main, [role="main"]',
+  ];
+
+  function unoffset(nav) {
+    const width = Math.round(nav.getBoundingClientRect().width);
+    if (!width) return null;
+
+    let anchor = null;
+    for (const selector of CONTENT_ANCHORS) {
+      anchor = document.querySelector(selector);
+      if (anchor) break;
+    }
+    if (!anchor) return null;
+
+    for (let node = anchor; node && node !== document.body; node = node.parentElement) {
+      if (Math.round(parseFloat(getComputedStyle(node).paddingLeft) || 0) === width) {
+        node.classList.add('bbm-unoffset');
         return node;
       }
-      node = node.parentElement;
     }
     return null;
   }
@@ -69,7 +108,19 @@ var BBM_CHROME = (() => {
       console.warn('[bbm] native nav not found; leaving it in place');
       return false;
     }
+    unoffset(nav);
     nav.classList.add('bbm-native-nav');
+    return true;
+  }
+
+  function applied() {
+    return !!document.querySelector('.bbm-native-nav');
+  }
+
+  function apply() {
+    ensure();
+    if (!hideNativeNav()) return false;
+    document.body.classList.add('bbm-railed');
     return true;
   }
 
@@ -79,11 +130,33 @@ var BBM_CHROME = (() => {
     // ensure() on the other side of that.
     if (COURSE_LIST_RE.test(location.pathname)) return;
 
-    ensure();
-    if (hideNativeNav()) document.body.classList.add('bbm-railed');
+    if (apply()) return;
+
+    // Blackboard's sidebar is React-rendered, so at document_idle it often
+    // does not exist yet and the first apply() finds nothing. Watch for it
+    // instead of giving up — this is the normal path, not the exception.
+    const waiting = new MutationObserver(() => {
+      if (apply()) waiting.disconnect();
+    });
+    waiting.observe(document.documentElement, { childList: true, subtree: true });
+    setTimeout(() => waiting.disconnect(), 20000);
+  }
+
+  // Ultra is a single-page app: routing to another page rebuilds the content
+  // container, which drops the .bbm-unoffset tag with it, and can re-mount
+  // the sidebar. Re-apply whenever the marks go missing. Cheap — a single
+  // querySelector per tick, and apply() no-ops once the marks are back.
+  function watch() {
+    setInterval(() => {
+      if (!ULTRA_RE.test(location.pathname)) return;
+      if (COURSE_LIST_RE.test(location.pathname)) return;
+      if (applied() && document.querySelector('.bbm-unoffset')) return;
+      apply();
+    }, 600);
   }
 
   start();
+  watch();
 
   return { ensure, hideNativeNav, findNativeNav };
 })();

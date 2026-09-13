@@ -304,8 +304,21 @@ lives on a page that no longer renders, and the flag survives reloads, so
 there is nothing on screen to say what happened or how to undo it. Closing
 the tab also clears it, since sessionStorage is per-tab.
 
-Only the course list is taken over. Course interiors, Calendar, Messages,
-Grades and login are Blackboard's, and stay that way.
+## The other Ultra pages
+
+`chrome.js` puts the dock and the task drawer on every `/ultra/*` page and
+hides Blackboard's own sidebar, so Calendrier, Messages, Notes, Activité,
+Page de l'établissement and Outils all share the same chrome. Their
+**content stays Blackboard's**, reskinned by `mocha.css` — only the course
+list is rendered from the API.
+
+Hiding the sidebar means two things, not one: the sidebar (`<base-side-menu>`,
+a custom element, so no fragile class name) and the page offset Blackboard
+reserved for it (`div.hide-in-background`, found by measurement rather than
+by name). Miss the second and content sits pushed right by both that offset
+and the dock.
+
+Course interiors and login are untouched.
 
 ## What it does elsewhere
 

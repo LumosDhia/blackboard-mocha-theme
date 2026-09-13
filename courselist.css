@@ -811,3 +811,11 @@ body .bbm-restore:hover {
 body .bbm-native-nav {
   display: none !important;
 }
+
+/* The page offset Blackboard reserved for the sidebar it is no longer
+ * showing. chrome.js tags whichever element carries a padding-left equal to
+ * the sidebar's measured width; body.bbm-railed then supplies the dock's own
+ * 76px in its place. */
+body .bbm-unoffset {
+  padding-left: 0 !important;
+}
