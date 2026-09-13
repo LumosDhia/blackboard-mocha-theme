@@ -66,7 +66,13 @@ body.bbm-takeover-body {
 
 /* ------------------------------------------------------------------ header */
 
+/* mocha.css paints `body header` (and `body nav`, see .bbm-rail below) with
+ * a surface background and !important, as part of its generic-chrome layer.
+ * Both of those match elements we created, so they have to be unpainted
+ * again — class specificity beats the element selector, but only if we are
+ * !important too. */
 .bbm-app .bbm-top {
+  background-color: transparent !important;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -205,10 +211,23 @@ body.bbm-takeover-body {
 
 /* Indented under its title, exactly as the startpage indents `ul`. No gap
  * between entries: they are lines of a list, spaced by line-height. */
+.bbm-app .bbm-col {
+  /* The startpage's `ul { padding: 0 0 0 1em }`. It has to sit on the column,
+     not on the list of entries: over there the group title is `li:first-child`
+     *inside* the same ul, so title and entries share one left edge. Indenting
+     only the entries put them 1em right of their own heading. The 1em is also
+     what the "> " hover marker hangs in. */
+  padding-left: 1em;
+}
+
 .bbm-app .bbm-col-body {
   display: flex;
   flex-direction: column;
-  padding-left: 1em;
+  /* Entries are lines of a list. The startpage leaves them at line-height
+     `normal` with no gap — measured at 29px per 25px row, ~1.16. The small
+     gap here is the one concession to names that wrap, which theirs never
+     do; without it a two-line entry runs into the next one. */
+  gap: 0.3em;
 }
 
 /* A column filtered down to nothing keeps its heading so the other three
@@ -232,7 +251,8 @@ body.bbm-takeover-body {
 .bbm-app .bbm-course {
   position: relative;
   display: block;
-  padding: 3px 0;
+  min-width: 0;
+  overflow-wrap: break-word;
   text-decoration: none;
   color: var(--ctp-text, #cdd6f4);
   transition: transform 0.15s ease, color 0.2s ease;
@@ -265,12 +285,17 @@ body.bbm-takeover-body {
   display: none;
 }
 
+/* "Virtualisation&Cloud" has no break opportunity and is wider than a
+ * quarter-width column, so without this it spills over the next column's
+ * text. The startpage never hits this: its labels are short and its columns
+ * are content-sized. */
 .bbm-app .bbm-course-name {
   display: inline;
+  overflow-wrap: break-word;
   margin: 0;
   font-size: 1em;
   font-weight: normal;
-  line-height: 1.5;
+  line-height: 1.25;
   color: inherit;
 }
 
@@ -592,6 +617,14 @@ body.bbm-takeover-body {
 
 body.bbm-railed {
   padding-left: var(--bbm-rail-w);
+}
+
+/* `body nav { background-color: … !important }` in mocha.css lands on this
+ * element. The dock is supposed to sit on the page background with no
+ * surface of its own, so undo it here. */
+body .bbm-rail {
+  background-color: transparent !important;
+  border: none !important;
 }
 
 .bbm-rail {
