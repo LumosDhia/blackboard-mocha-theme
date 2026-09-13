@@ -105,6 +105,37 @@ not, and a guess there would have produced a link that silently 404s.
 Déconnexion is deliberately absent, matching `content.js`'s existing choice
 to hide it (see below). Add an entry to `ITEMS` in `rail.js` if you want it.
 
+### Rail artwork
+
+`rail-art.jpg` fills whatever the nav list leaves at the bottom of the rail,
+fading into the page background along its top edge. It is decorative only —
+`aria-hidden`, not a link, not in the tab order — and it is hidden entirely
+on the collapsed icon rail, where 62px is too narrow for it to read as
+anything.
+
+The Catppuccin Mocha grade is **baked into the JPEG**, not applied in CSS. A
+CSS `filter` on `.bbm-rail-art` would also filter its own `::after` and dim
+the top fade along with the picture, and a `mix-blend-mode` tint would need
+an extra isolated layer to blend against. Grading the file once is both more
+controllable and free at runtime.
+
+To swap in a different picture:
+
+```sh
+python3 tools/grade-art.py ~/Pictures/whatever.jpg
+```
+
+That resizes to 2× the rail width and maps luminance through a
+base → surface1 → mauve → lavender → rosewater ramp, keeping 18% of the
+original so warm accents don't flatten out. It autocontrasts first — a dark
+source otherwise only ever reaches the bottom of the ramp and comes out
+nearly black.
+
+**Provenance:** the bundled image is someone else's artwork (signed "Enzo
+Japhet"), found on Pinterest and used here for a personal, unpublished
+extension. If this ever gets distributed, replace it with something you have
+the rights to.
+
 ### Task drawer
 
 Blackboard's "Tâches à accomplir" panel, rebuilt and docked to the right

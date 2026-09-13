@@ -527,7 +527,9 @@ body.bbm-railed {
   flex-direction: column;
   width: var(--bbm-rail-w);
   height: 100%;
-  padding: 14px 0;
+  /* No bottom padding: the art is the last child and should run flush to the
+     bottom edge of the viewport rather than float above a strip of base. */
+  padding: 14px 0 0;
   overflow-y: auto;
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
@@ -593,5 +595,53 @@ body.bbm-railed {
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+}
+
+/* ------------------------------------------------------------- rail art
+ *
+ * Decorative artwork filling whatever the nav list leaves at the bottom of
+ * the rail.
+ *
+ * The Catppuccin Mocha grade is baked into the JPEG at build time, not
+ * applied here: a CSS `filter` on this element would also filter its own
+ * ::after, dimming the fade along with the picture, and a `mix-blend-mode`
+ * tint would need an extra isolated layer to blend against. Grading the file
+ * once — luminance stretched, then mapped through a base→mauve→lavender
+ * ramp, keeping ~18% of the original for the lantern warmth — is both more
+ * controllable and free at runtime. The recipe is in README.
+ *
+ * So the only thing CSS does is fade the top edge into --ctp-base. The rail
+ * has no background of its own, so without that the image would sit there as
+ * a pasted-on rectangle with a hard horizontal edge.
+ */
+
+.bbm-rail .bbm-rail-art {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 150px;
+  margin-top: 18px;
+  background-image: url("rail-art.jpg");
+  background-size: cover;
+  background-position: center 30%;
+}
+
+.bbm-rail .bbm-rail-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to bottom,
+    var(--ctp-base, #1e1e2e) 0%,
+    rgba(30, 30, 46, 0.5) 16%,
+    rgba(30, 30, 46, 0) 38%
+  );
+}
+
+/* Collapsed icon rail: 62px is too narrow for the art to read as anything. */
+@media (max-width: 900px) {
+  .bbm-rail .bbm-rail-art {
+    display: none;
   }
 }
