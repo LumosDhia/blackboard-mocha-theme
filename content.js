@@ -184,6 +184,19 @@
     }
   }
 
+  // The legal links in the sidebar footer (Confidentialite / Conditions
+  // generales / Accessibilite). Matched on link text rather than class:
+  // they sit in a MUI list whose JSS suffixes change between builds.
+  const LEGAL_LINK_RE = /^(confidentialit|conditions g[\u00e9e]n|accessibilit|privacy|terms of use|accessibility)/i;
+
+  function hideLegalFooter(root) {
+    root.querySelectorAll('a').forEach((link) => {
+      const text = link.textContent.trim();
+      if (text.length > 40 || !LEGAL_LINK_RE.test(text)) return;
+      (link.closest('li') || link).classList.add('bbm-hidden-control');
+    });
+  }
+
   // Blackboard's "N resultats" chip. It is React/JSS — a different stack
   // from the AngularJS course list — so it keeps counting the courses we
   // hide. The JSS suffix (chipResultGroup-0-2-131) changes between builds,
@@ -287,6 +300,7 @@
     hideTerms(document);
     scanForCards(document);
     hideToolbarExceptSearch(document);
+    hideLegalFooter(document);
     updateResultCount();
   }
 

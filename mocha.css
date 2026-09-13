@@ -216,6 +216,148 @@ body [class*="MuiOutlinedInput-root" i] {
   background-color: var(--ctp-surface0) !important;
 }
 
+/* ---------------------------------------------------------------------
+ * Modern pass — layout, depth and typography on top of the recolor above.
+ * ------------------------------------------------------------------- */
+
+body .course-element-card {
+  border-radius: 14px !important;
+  overflow: hidden !important; /* clips the banner to the rounded corners */
+  border: 1px solid var(--ctp-surface0) !important;
+  background-color: var(--ctp-mantle) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+    border-color 0.18s ease !important;
+}
+
+body .course-element-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45) !important;
+  border-color: var(--ctp-surface2) !important;
+}
+
+body .element-details.summary {
+  padding: 14px 16px 12px !important;
+  background: transparent !important;
+}
+
+body .multi-column-course-id {
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--ctp-overlay1) !important;
+  margin-bottom: 5px !important;
+}
+
+body .course-title {
+  text-decoration: none !important;
+}
+
+body .js-course-title-element {
+  font-size: 15px !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+  color: var(--ctp-text) !important;
+  margin: 0 0 8px !important;
+}
+
+body .course-element-card:hover .js-course-title-element {
+  color: var(--ctp-lavender) !important;
+}
+
+/* Status row. No border-top here: with the row's padding it reads as a
+ * strikethrough straight through "Ouvert / Debuter maintenant". */
+body .course-status {
+  font-size: 12px !important;
+  color: var(--ctp-subtext0) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body .course-status a {
+  color: var(--ctp-blue) !important;
+  text-decoration: none !important;
+}
+
+body .course-element-card bdi {
+  font-size: 11px !important;
+  color: var(--ctp-overlay0) !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Favourite star: icon, not a filled button. */
+body .course-element-card button {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  padding: 6px !important;
+}
+
+body .course-element-card button:hover {
+  background: var(--ctp-surface0) !important;
+}
+
+/* Term heading as a quiet section label rather than a filled bar. */
+body .course-card-term-name {
+  background: transparent !important;
+  border: 0 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--ctp-overlay1) !important;
+  padding: 22px 2px 10px !important;
+}
+
+/* Search box: pill. */
+body [class*="toolbarRow" i] [class*="MuiOutlinedInput-root" i] {
+  border-radius: 999px !important;
+  background-color: var(--ctp-mantle) !important;
+}
+body [class*="toolbarRow" i] fieldset {
+  border-color: var(--ctp-surface0) !important;
+}
+body [class*="toolbarRow" i] [class*="MuiOutlinedInput-root" i]:hover fieldset {
+  border-color: var(--ctp-surface2) !important;
+}
+
+body [class*="chipResultGroup" i] {
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+  color: var(--ctp-overlay1) !important;
+  padding-top: 6px !important;
+}
+
+/* Instructor row. `bb-username` hardcodes rgb(38,38,38) like the JSS text
+ * above, and the broad selectors over-match here: `[class*="card" i]`
+ * catches `usercard-trigger` and `[class*="button" i]` catches
+ * `combined-view-all-button`, painting boxes behind plain text. */
+body bb-username,
+body [class*="user-name" i],
+body [class*="username" i] {
+  color: var(--ctp-overlay0) !important;
+}
+
+body .usercard-trigger,
+body .combined-view-all-button,
+body .button-anchor {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+body .button-anchor {
+  text-decoration: none !important;
+  color: var(--ctp-blue) !important;
+}
+
+body .multi-users-title,
+body .view-users {
+  color: var(--ctp-overlay0) !important;
+}
+
 /* Toolbar controls hidden by content.js — everything in the course list's
  * toolbar row except the search box. */
 .bbm-hidden-control {
