@@ -127,6 +127,47 @@
     );
   }
 
+  // Bundled with the extension, so it needs an extension URL rather than a
+  // page-relative one — and the file is declared in web_accessible_resources
+  // for the page to be allowed to load it at all.
+  function artwork() {
+    let src;
+    try {
+      src = browser.runtime.getURL('rail-art.jpg');
+    } catch (e) {
+      return null; // not running as an extension (a bare page test)
+    }
+    return el('img', {
+      class: 'bbm-art',
+      src,
+      alt: '',
+      'aria-hidden': 'true',
+      loading: 'lazy',
+    });
+  }
+
+  // 1-4 jump to a column, matching the [n] hints on the titles. Focus lands
+  // on the column's first course so Enter opens it and Tab carries on from
+  // there, rather than merely scrolling.
+  function bindShortcuts(sections) {
+    document.addEventListener('keydown', (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      const target = event.target;
+      if (target && (target.isContentEditable ||
+          /^(input|textarea|select)$/i.test(target.tagName || ''))) {
+        return;
+      }
+      const index = Number(event.key) - 1;
+      if (!Number.isInteger(index) || index < 0 || index >= sections.length) return;
+
+      const first = sections[index].querySelector('.bbm-course');
+      if (!first) return;
+      event.preventDefault();
+      first.focus();
+      first.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
   function bypassToOriginal() {
     try {
       sessionStorage.setItem(BYPASS_KEY, '1');
@@ -223,25 +264,29 @@
     // One column per category. A column with nothing in it still renders its
     // heading, so the four stay aligned instead of reflowing when a category
     // happens to be empty this semester.
-    const board = el(
-      'div',
-      { class: 'bbm-columns' },
-      ...columns.map((column, i) =>
-        el(
-          'section',
-          { class: 'bbm-col' },
-          // data-shortcut renders as a dimmed "[1]" after the title, the way
-          // rose-startpage marks its categories. Decorative here — nothing
-          // is bound to the number keys.
-          el('h2', {
-            class: 'bbm-col-name',
-            'data-shortcut': String(i + 1),
-            text: column.label,
-          }),
-          el('div', { class: 'bbm-col-body' }, ...column.courses.map(courseCard))
-        )
+    const sections = columns.map((column, i) =>
+      el(
+        'section',
+        { class: 'bbm-col' },
+        // data-shortcut renders as a dimmed "[1]" after the title, the way
+        // rose-startpage marks its categories — and, as there, the number is
+        // live: see bindShortcuts below.
+        el('h2', {
+          class: 'bbm-col-name',
+          'data-shortcut': String(i + 1),
+          text: column.label,
+        }),
+        el('div', { class: 'bbm-col-body' }, ...column.courses.map(courseCard))
       )
     );
+
+    const board = el('div', { class: 'bbm-columns' }, ...sections);
+
+    // The picture sits beside the columns, as it does on the startpage —
+    // a flex sibling of the list rather than part of it.
+    const stage = el('div', { class: 'bbm-stage' }, board, artwork());
+
+    bindShortcuts(sections);
 
     const app = el(
       'div',
@@ -269,7 +314,7 @@
           })
         )
       ),
-      board
+      stage
     );
 
     mount(app);

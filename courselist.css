@@ -108,6 +108,13 @@ body.bbm-takeover-body {
  * same way. */
 :root {
   --bbm-mono: "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
+  /* Course entries. Hack Nerd Font is first, but it is NOT installed on this
+     machine and NOT bundled — nothing under ~/.local/share/fonts or fc-list
+     has a Hack face — so today this resolves to the same JetBrains Mono as
+     everything else. Install Hack Nerd Font and the entries pick it up with
+     no change here; until then the fallback is deliberate, not an oversight. */
+  --bbm-mono-entries: "Hack Nerd Font", "HackNerdFont", "Hack",
+    "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
   /* rose-startpage's --font-size-base. Its whole scale hangs off this one
      number: the heading is 2em of it, and titles and entries inherit it
      outright. Ours was 14px, which is the main reason the two pages did not
@@ -181,7 +188,17 @@ body.bbm-takeover-body {
  * in a margin. That is what makes a title read as the head of its list
  * instead of as a separate band — so no uppercase, no letter-spacing and no
  * rule under it either; weight and the rosewater accent do the work. */
+/* Columns and picture side by side, the way the startpage lays `nav` and
+ * `img` out as flex siblings. */
+.bbm-app .bbm-stage {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5em;
+}
+
 .bbm-app .bbm-columns {
+  flex: 1;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0 1.5em;
@@ -203,6 +220,25 @@ body.bbm-takeover-body {
 
 /* Indented under its title, exactly as the startpage indents `ul`. No gap
  * between entries: they are lines of a list, spaced by line-height. */
+/* rose-startpage's `img` rule: 10em wide, a 2px border in the text colour,
+ * cover-cropped from the bottom (`object-position: 50% 100%`). It hides the
+ * picture below 700px; same here. */
+.bbm-app .bbm-art {
+  flex-shrink: 0;
+  width: 10em;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+  border: 2px solid var(--ctp-text, #cdd6f4);
+}
+
+@media (max-width: 700px) {
+  .bbm-app .bbm-art {
+    display: none;
+  }
+}
+
 .bbm-app .bbm-col {
   /* The startpage's `ul { padding: 0 0 0 1em }`. It has to sit on the column,
      not on the list of entries: over there the group title is `li:first-child`
@@ -285,6 +321,7 @@ body.bbm-takeover-body {
  * are content-sized. */
 .bbm-app .bbm-course-name {
   display: inline;
+  font-family: var(--bbm-mono-entries);
   overflow-wrap: break-word;
   margin: 0;
   /* Smaller than the group title above it, which stays at the base size —
@@ -698,57 +735,6 @@ body .bbm-rail {
   .bbm-rail .bbm-rail-glyph,
   .bbm-rail .bbm-rail-label {
     transition: none;
-  }
-}
-
-/* ------------------------------------------------------------- rail art
- *
- * Decorative artwork filling whatever the nav list leaves at the bottom of
- * the rail.
- *
- * The Catppuccin Mocha grade is baked into the JPEG at build time, not
- * applied here: a CSS `filter` on this element would also filter its own
- * ::after, dimming the fade along with the picture, and a `mix-blend-mode`
- * tint would need an extra isolated layer to blend against. Grading the file
- * once — luminance stretched, then mapped through a base→mauve→lavender
- * ramp, keeping ~18% of the original for the lantern warmth — is both more
- * controllable and free at runtime. The recipe is in README.
- *
- * So the only thing CSS does is fade the top edge into --ctp-base. The rail
- * has no background of its own, so without that the image would sit there as
- * a pasted-on rectangle with a hard horizontal edge.
- */
-
-.bbm-rail .bbm-rail-art {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 150px;
-  /* Same reason as the dock's top padding, at the other end: magnifying a
-     row near the bottom pushes it down into whatever follows. */
-  margin-top: 46px;
-  background-image: url("rail-art.jpg");
-  background-size: cover;
-  background-position: center 30%;
-}
-
-.bbm-rail .bbm-rail-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(
-    to bottom,
-    var(--ctp-base, #1e1e2e) 0%,
-    rgba(30, 30, 46, 0.5) 16%,
-    rgba(30, 30, 46, 0) 38%
-  );
-}
-
-/* On a phone the dock plus one column of cards is already tight; the art is
- * the first thing that should go. */
-@media (max-width: 640px) {
-  .bbm-rail .bbm-rail-art {
-    display: none;
   }
 }
 

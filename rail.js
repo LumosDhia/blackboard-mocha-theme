@@ -177,13 +177,6 @@ var BBM_RAIL = (() => {
     for (const item of items) rail.append(item);
     magnifier(rail, items);
 
-    // Decorative only: aria-hidden, and not a link, so it is invisible to
-    // screen readers and to keyboard tabbing through the nav.
-    const art = document.createElement('div');
-    art.className = 'bbm-rail-art';
-    art.setAttribute('aria-hidden', 'true');
-    rail.append(art);
-
     document.body.append(rail);
     // The rail is fixed, so it is out of flow — the page has to be pushed
     // clear of it by hand. A class rather than an inline style so the

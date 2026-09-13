@@ -108,8 +108,10 @@ rather than using the startpage's 9999, so the dots fall over the dock and
 the task drawer too.
 
 Each title carries a dimmed `[1]`…`[4]` after it, rendered through
-`data-shortcut` and a `::after` exactly as the startpage does it. **They are
-decorative** — nothing is bound to the number keys here, unlike over there.
+`data-shortcut` and a `::after` exactly as the startpage does it, and — as
+there — the numbers are live: pressing 1-4 focuses the first course in that
+column, so Enter opens it and Tab continues from there. The handler ignores
+the key when a modifier is held or when focus is in a field.
 The title is `white-space: nowrap` so a two-word category like "Tronc commun"
 cannot push its number onto a line of its own.
 
@@ -164,6 +166,12 @@ neighbours are pushed apart the way the real dock pushes them. The row
 nearest the cursor is then re-anchored to where it started, or the whole
 column visibly slides as the stack grows.
 
+Course entries are set in `--bbm-mono-entries`, which puts Hack Nerd Font
+first and falls back to the bundled JetBrains Mono. **Hack is not installed
+or bundled** — nothing in `fc-list` or `~/.local/share/fonts` has it — so
+today that fallback is what renders. Install Hack Nerd Font and entries pick
+it up with no change to the CSS.
+
 Two knobs at the top of `rail.js`: `MAX_SCALE` (1.75) and `RADIUS` (118px of
 influence either side of the cursor); `FALLOFF` above 1 tightens the peak.
 
@@ -188,13 +196,17 @@ not, and a guess there would have produced a link that silently 404s.
 Déconnexion is deliberately absent, matching `content.js`'s existing choice
 to hide it (see below). Add an entry to `ITEMS` in `rail.js` if you want it.
 
-### Rail artwork
+### Artwork
 
-`rail-art.jpg` fills whatever the nav list leaves at the bottom of the rail,
-fading into the page background along its top edge. It is decorative only —
-`aria-hidden`, not a link, not in the tab order — and it is hidden entirely
-on the collapsed icon rail, where 62px is too narrow for it to read as
-anything.
+`rail-art.jpg` sits to the right of the columns, as the picture does on
+rose-startpage, and copies that project's `img` rule: `width: 10em`, a 2px
+border in the text colour, `object-fit: cover` with `object-position: 50%
+100%`, and hidden below 700px. It is decorative only — `aria-hidden`, empty
+`alt`, not in the tab order.
+
+It is loaded through `browser.runtime.getURL`, not a page-relative path, and
+is declared in `web_accessible_resources` so the page is allowed to fetch it
+at all.
 
 The Catppuccin Mocha grade is **baked into the JPEG**, not applied in CSS. A
 CSS `filter` on `.bbm-rail-art` would also filter its own `::after` and dim
