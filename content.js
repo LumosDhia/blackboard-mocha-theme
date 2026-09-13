@@ -166,6 +166,24 @@
     processedCards.add(card);
   }
 
+  // The toolbar row above the course list: view toggle, search box, two
+  // filter dropdowns, and a per-page picker. Everything except the search
+  // box is hidden. The search field is identified by holding a real text
+  // input — MUI's selects carry a hidden `.MuiSelect-nativeInput` that
+  // would otherwise look like one — rather than by position, so reordering
+  // or a locale change doesn't break it.
+  const TOOLBAR_ROW_SELECTOR = '[class*="toolbarRow" i]';
+  const SEARCH_FIELD_SELECTOR = 'input[type="text"]:not([class*="MuiSelect-nativeInput" i])';
+
+  function hideToolbarExceptSearch(root) {
+    const row = root.querySelector(TOOLBAR_ROW_SELECTOR);
+    if (!row) return;
+    for (const child of row.children) {
+      const isSearch = !!child.querySelector(SEARCH_FIELD_SELECTOR);
+      child.classList.toggle('bbm-hidden-control', !isSearch);
+    }
+  }
+
   // Blackboard's "N resultats" chip. It is React/JSS — a different stack
   // from the AngularJS course list — so it keeps counting the courses we
   // hide. The JSS suffix (chipResultGroup-0-2-131) changes between builds,
@@ -268,6 +286,7 @@
   function fullScan() {
     hideTerms(document);
     scanForCards(document);
+    hideToolbarExceptSearch(document);
     updateResultCount();
   }
 
@@ -298,18 +317,23 @@
   watched = observedRoot();
   observer.observe(watched, { childList: true, subtree: true });
 
-  // The counter lives outside `.course-org-list`, so the observer above
-  // never sees React re-render it. Watch just that small subtree. Our own
-  // write settles: the next fire sees the text we wrote, recomputes the
-  // same value, and writes nothing.
-  (function watchResultCount() {
-    const el = document.querySelector(RESULT_COUNT_SELECTOR);
-    const host = el && el.parentElement;
+  // The toolbar and the count chip are React, live outside
+  // `.course-org-list`, and share one container — so the observer above
+  // never sees either re-render. Watch that small subtree for both. Our own
+  // writes settle: the next fire recomputes the same values and changes
+  // nothing.
+  (function watchPageChrome() {
+    const row = document.querySelector(TOOLBAR_ROW_SELECTOR);
+    const chip = document.querySelector(RESULT_COUNT_SELECTOR);
+    const host = (row && row.parentElement) || (chip && chip.parentElement);
     if (!host) return;
-    const countObserver = new MutationObserver(() => {
-      clearTimeout(countObserver._debounce);
-      countObserver._debounce = setTimeout(updateResultCount, 100);
+    const chromeObserver = new MutationObserver(() => {
+      clearTimeout(chromeObserver._debounce);
+      chromeObserver._debounce = setTimeout(() => {
+        hideToolbarExceptSearch(document);
+        updateResultCount();
+      }, 100);
     });
-    countObserver.observe(host, { childList: true, subtree: true, characterData: true });
+    chromeObserver.observe(host, { childList: true, subtree: true, characterData: true });
   })();
 })();

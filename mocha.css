@@ -216,6 +216,12 @@ body [class*="MuiOutlinedInput-root" i] {
   background-color: var(--ctp-surface0) !important;
 }
 
+/* Toolbar controls hidden by content.js — everything in the course list's
+ * toolbar row except the search box. */
+.bbm-hidden-control {
+  display: none !important;
+}
+
 /* Terms hidden by content.js (HIDDEN_TERM_PATTERNS) — the term header and
  * all of its course cards. Blackboard's own "N résultats" count above the
  * list is its own and still counts hidden courses. */

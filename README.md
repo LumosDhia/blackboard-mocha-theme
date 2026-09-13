@@ -55,6 +55,16 @@ while the label is what you actually see. Note that Blackboard's own
 "N résultats" counter above the list is its own and still counts hidden
 courses.
 
+## Toolbar
+
+Only the search box is kept in the course list's toolbar row. The view
+toggle, the "Périodes de cours" and "Filtres" dropdowns, and the per-page
+picker are hidden (`hideToolbarExceptSearch` in `content.js`). Delete that
+call in `fullScan()` to get them back.
+
+The results count next to it is rewritten to exclude hidden courses, so it
+reports what you can actually see rather than Blackboard's own total.
+
 ## Known limitations
 
 - **Closed shadow DOM.** If any part of Blackboard Ultra's UI uses *closed*
