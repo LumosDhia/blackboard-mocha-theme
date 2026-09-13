@@ -226,11 +226,18 @@
     const board = el(
       'div',
       { class: 'bbm-columns' },
-      ...columns.map((column) =>
+      ...columns.map((column, i) =>
         el(
           'section',
           { class: 'bbm-col' },
-          el('h2', { class: 'bbm-col-name', text: column.label }),
+          // data-shortcut renders as a dimmed "[1]" after the title, the way
+          // rose-startpage marks its categories. Decorative here — nothing
+          // is bound to the number keys.
+          el('h2', {
+            class: 'bbm-col-name',
+            'data-shortcut': String(i + 1),
+            text: column.label,
+          }),
           el('div', { class: 'bbm-col-body' }, ...column.courses.map(courseCard))
         )
       )

@@ -193,6 +193,11 @@ body.bbm-takeover-body {
   font-size: 1em;
   font-weight: 700;
   line-height: 2;
+  /* Keeps the "[1]" on the same line as the title. "Tronc commun" is two
+     words, so without this the pseudo-element broke onto its own line. The
+     startpage sets nowrap on the whole list for the same reason; here it is
+     scoped to the title, because entries do need to wrap. */
+  white-space: nowrap;
   color: var(--ctp-rosewater, #f5e0dc) !important;
 }
 
@@ -205,6 +210,13 @@ body.bbm-takeover-body {
      only the entries put them 1em right of their own heading. The 1em is also
      what the "> " hover marker hangs in. */
   padding-left: 1em;
+}
+
+/* rose-startpage's `li[data-shortcut]::after` — the dimmed "[1]" beside each
+ * category. Same content expression and same 0.3 opacity. */
+.bbm-app .bbm-col-name[data-shortcut]::after {
+  content: " [" attr(data-shortcut) "]";
+  opacity: 0.3;
 }
 
 .bbm-app .bbm-col-body {

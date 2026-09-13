@@ -107,6 +107,14 @@ copied across: 1px dots on a 20px grid at 4% opacity, fixed and
 rather than using the startpage's 9999, so the dots fall over the dock and
 the task drawer too.
 
+Each title carries a dimmed `[1]`…`[4]` after it, rendered through
+`data-shortcut` and a `::after` exactly as the startpage does it. **They are
+decorative** — nothing is bound to the number keys here, unlike over there.
+The title is `white-space: nowrap` so a two-word category like "Tronc commun"
+cannot push its number onto a line of its own.
+
+There is no search box.
+
 Spacing follows rose-startpage: columns 1.5em apart, and each group title
 carrying the gap beneath it in its own `line-height` (2) rather than in a
 margin. That is what makes a title read as the head of its list instead of as
