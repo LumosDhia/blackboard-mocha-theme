@@ -50,7 +50,10 @@ body.bbm-takeover-body {
 
 .bbm-app {
   box-sizing: border-box;
-  max-width: 1200px;
+  /* Wider than the old 1200px: four columns *plus* the 10em picture left the
+     columns at 161px of content, which a nowrap title like
+     "Tronc commun [2]" overflowed by 98px, sliding under the next column. */
+  max-width: 1400px;
   margin: 0 auto;
   padding: 40px 28px 72px;
   /* Mono throughout, as on rose-startpage — not just for the heading. */
@@ -207,7 +210,9 @@ body.bbm-takeover-body {
 
 .bbm-app .bbm-col-name {
   margin: 0;
-  font-size: 1em;
+  /* Below the base size, so "Tronc commun [2]" fits a column without
+     wrapping and the entries under it stay clearly subordinate. */
+  font-size: 0.8em;
   font-weight: 700;
   line-height: 2;
   /* Keeps the "[1]" on the same line as the title. "Tronc commun" is two
@@ -319,16 +324,33 @@ body.bbm-takeover-body {
  * quarter-width column, so without this it spills over the next column's
  * text. The startpage never hits this: its labels are short and its columns
  * are content-sized. */
+/* Clamped to two lines. At a quarter of the page width a long French course
+ * name was running to four or five, and `overflow-wrap: break-word` was
+ * splitting words mid-syllable ("Administratio / n des bases") to do it —
+ * which made a column of entries unreadable as a list.
+ *
+ * -webkit-box is what line-clamp needs; it is the only widely supported way
+ * to clamp by line count. That forces the "Indisponible" tag onto its own
+ * line rather than trailing the name, which is fine — it is rare, and the
+ * full name is on the link's title attribute either way. */
 .bbm-app .bbm-course-name {
-  display: inline;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-family: var(--bbm-mono-entries);
   overflow-wrap: break-word;
   margin: 0;
-  /* Smaller than the group title above it, which stays at the base size —
-     the hierarchy now comes from size as well as weight and colour. */
-  font-size: 0.78em;
+  /* Smaller than the group title, which stays at the base size — the
+     hierarchy comes from size as well as weight and colour.
+     Measured against the real 18 courses in a 4-column layout, the number
+     of names that get truncated by the 2-line clamp is:
+       0.60em/15px → 9   0.56em/14px → 6   0.52em/13px → 4
+       0.48em/12px → 3   0.44em/11px → 1
+     0.52em is the knee: clearly smaller, and most names still fit whole. */
+  font-size: 0.52em;
   font-weight: normal;
-  line-height: 1.25;
+  line-height: 1.3;
   color: inherit !important;
 }
 

@@ -135,6 +135,18 @@ colour never appeared at all. The same applies to `body header` and
 `body nav`, which were painting a surface behind the page header and the
 dock.
 
+Entry names are **clamped to two lines** (`-webkit-line-clamp`) at 13px, with
+the full name on the link's `title`. Without the clamp a long French course
+name ran to four or five lines in a quarter-width column, and `break-word`
+split it mid-syllable to get there. Measured against the real 18 courses, the
+number still truncated at each size is 15px → 9, 14px → 6, **13px → 4**,
+12px → 3, 11px → 1; at the current 1400px page width only one truncates.
+
+Group titles sit at `0.8em` rather than the base size, and the page is
+1400px rather than 1200px, both for the same reason: four columns *plus* the
+10em picture left only 161px of column content, which the nowrap title
+"Tronc commun [2]" overflowed by 98px — sliding under the next column.
+
 Entries are plain text lines, not cards — the startpage's `li > a`
 treatment. No background, no border; hovering slides a mauve `> ` marker in
 from the left and nudges the row 4px across, and the whole page is set in the

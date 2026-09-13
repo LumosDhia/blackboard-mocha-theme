@@ -249,7 +249,9 @@
       {
         class: 'bbm-course',
         href: course.url,
-        title: course.available ? null : 'Cours indisponible',
+        // The name is clamped to two lines in CSS, so the full string lives
+        // here — otherwise a truncated course would be unidentifiable.
+        title: course.available ? course.title : `${course.title} — indisponible`,
       },
       el('h3', { class: 'bbm-course-name', text: course.title }),
       // The one exception: an unavailable course still has to say so, or the
