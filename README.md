@@ -96,7 +96,14 @@ one typo of Esprit's own ("Cyber Defense - Systems & Netowrks").
 | Autres | everything else | 4 |
 
 The last column is the catch-all, so a prefix nobody has seen before lands
-somewhere visible instead of disappearing. Term filtering still applies
+somewhere visible instead of disappearing.
+
+Spacing follows rose-startpage: columns 1.5em apart, and each group title
+carrying the gap beneath it in its own `line-height` (2) rather than in a
+margin. That is what makes a title read as the head of its list instead of as
+a separate band, so there is no uppercase, no letter-spacing and no rule
+under it — weight and the rosewater accent carry it, exactly as
+`li:first-child` does on the startpage. Term filtering still applies
 first — hiding Semestre 2 is a separate setting, and grouping by subject
 doesn't change which semester you want on screen.
 

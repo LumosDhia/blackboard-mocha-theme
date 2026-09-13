@@ -147,35 +147,38 @@ body.bbm-takeover-body {
 
 /* Four columns, one per course category. Fixed count rather than auto-fill:
  * the point is the grouping, so the columns must not reflow into a different
- * number and break the read. */
+ * number and break the read.
+ *
+ * Spacing follows rose-startpage: columns 1.5em apart, and the group title
+ * carrying the gap beneath it in its own line-height (2em there) rather than
+ * in a margin. That is what makes a title read as the head of its list
+ * instead of as a separate band — so no uppercase, no letter-spacing and no
+ * rule under it either; weight and the rosewater accent do the work. */
 .bbm-app .bbm-columns {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 26px;
+  gap: 0 1.5em;
   align-items: start;
 }
 
 .bbm-app .bbm-col-name {
-  margin: 0 0 14px;
-  padding-bottom: 10px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--ctp-overlay1, #7f849c);
-  border-bottom: 1px solid var(--ctp-surface0, #313244);
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 2;
+  color: var(--ctp-rosewater, #f5e0dc);
 }
 
 .bbm-app .bbm-col-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* A column filtered down to nothing keeps its heading so the other three
  * stay put; only the heading dims. */
 .bbm-app .bbm-col-empty .bbm-col-name {
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 /* ------------------------------------------------------------------ course */
