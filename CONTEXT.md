@@ -124,6 +124,101 @@ binding, not just for the elements to exist.
 - List view (the list/grid toggle at the top left of the course list) was
   not checked — it may not render `.course-banner` at all.
 
+## The REST API route (verified live, 13 Sept 2026)
+
+The alternative to restyling Blackboard's DOM: stop reading their markup and
+read their JSON instead, rendering a UI of our own. Probed against a live
+logged-in `esprit.blackboard.com` session to see whether that is even
+possible from a student account. **It is.**
+
+### Authentication: just the session cookie
+
+No developer key, no OAuth secret, no institution admin approval. A content
+script runs on `esprit.blackboard.com`, so `credentials: 'include'` sends the
+existing `JSESSIONID` and the server cannot tell the request apart from the
+SPA's own:
+
+```js
+fetch('https://esprit.blackboard.com/learn/api/public/v1/users/me',
+      {credentials:'include', headers:{Accept:'application/json'}})
+```
+
+The official route (register at `developer.blackboard.com`, then have an
+Esprit admin enable the application ID against the instance) is closed to a
+student and is not worth pursuing.
+
+### Gotcha: use absolute URLs, never relative
+
+The page carries `<base href="https://dmuwut6e40u5o.cloudfront.net/">`, so a
+relative `/learn/api/...` in `fetch()` resolves against the **CloudFront CDN**,
+goes cross-origin, and fails CORS as a bare `TypeError: Failed to fetch` —
+no status, no CORS message. This looks exactly like an auth failure and is
+not one. Always write the full `https://esprit.blackboard.com` origin.
+
+### What answers (all 200, cookie only)
+
+| Endpoint | Returns |
+| --- | --- |
+| `public/v1/users/me` | profile: id, username, student id, roles |
+| `public/v1/users/me/courses?expand=course&limit=100` | all 29 courses in one call — name, course code, term id |
+| `public/v1/courses/{id}/users` | roster (30 for the course tested) |
+| `v1/terms` | terms with real date ranges |
+| `v1/users/me?expand=systemRoles,insRoles` | roles, landing page, preferences |
+| `public/v1/calendars/items?since=…&until=…` | 200; `since`/`until` may not span more than 16 weeks |
+
+That is already everything the current course-list reskin needs — names,
+codes and terms — so the list page can be rebuilt from JSON today.
+
+### What is empty — and why it is *not* a permission wall
+
+`contents`, `announcements` and `gradebook/columns` return `200 {"results":[]}`
+for every one of the 10 courses scanned. That reads like a student
+restriction. It is not:
+
+- Blackboard's **own** UI shows the same course outline as empty — just the
+  nav tabs, no items.
+- The private endpoint reports `paging.count: 0` plus a `permissions` block,
+  and it is the identical call the Ultra SPA makes.
+- Every course was created `2026-09-12`. The semester has not started.
+
+So those endpoints are **unproven, not blocked**, and should fill in as
+teachers upload material. Re-probe before building content/grades views.
+
+### Two APIs, not one
+
+`/learn/api/v1/` (private, undocumented) is what the Ultra SPA itself calls,
+and it is richer than `/learn/api/public/v1/` — it returns a `permissions`
+object and `paging.count` alongside `results`. Same cookie, no extra work.
+Prefer public v1 where it suffices, drop to private v1 where it does not.
+
+Endpoints the course page itself hits, for reference:
+
+```
+/learn/api/v1/courses/{id}?expand=instructorsMembership,+effectiveAvailability
+/learn/api/v1/courses/{id}/contents?expand=children
+/learn/api/v1/courses/{id}/gradebook/columns
+/learn/api/v1/courses/{id}/tools
+/learn/api/v1/courses/{id}/announcements/counts
+/learn/api/v1/courses/{id}/gradebook/unreadGradesCount
+/learn/api/v1/terms
+```
+
+### Untested
+
+- `v1/streams/ultra` (the activity stream) returns 405 on GET — it is a POST
+  endpoint. Read-only in effect, but not exercised.
+- Anything requiring a write. The whole idea stays read-only; submissions,
+  quizzes, the rich editor and login/SSO should hand off to real Blackboard
+  via an escape hatch that turns the takeover off.
+
+### Why this beats the current approach
+
+Everything in the sections above about JSS suffixes (`makeStylesbaseText-0-2-191`),
+the shadow-root walk, AngularJS binding titles late, and the dark-on-dark
+contrast audit is the tax on styling someone else's DOM. Rendering from JSON
+removes that category entirely — Blackboard's REST shapes are versioned and
+far more stable than its CSS.
+
 ## Repo / account notes
 
 - GitHub: `LumosDhia/blackboard-mocha-theme`, pushed to `main`.
