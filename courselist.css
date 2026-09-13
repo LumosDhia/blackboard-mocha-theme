@@ -19,6 +19,27 @@ html.bbm-booting body {
   visibility: hidden !important;
 }
 
+/* rose-startpage's CRT dot-grid overlay (its `html::after`), copied
+ * verbatim: 1px dots on a 20px grid at 4% opacity. Fixed and
+ * pointer-events:none, so it sits over everything — dock and task drawer
+ * included — without intercepting a single click. Its z-index has to clear
+ * this page's own fixed chrome, which is why it is not the startpage's
+ * 9999. */
+body.bbm-takeover-body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483003;
+  background-image: radial-gradient(
+    circle,
+    var(--ctp-text, #cdd6f4) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+  opacity: 0.04;
+}
+
 body.bbm-takeover-body {
   margin: 0;
   padding: 0;
@@ -34,6 +55,7 @@ body.bbm-takeover-body {
   padding: 40px 28px 72px;
   /* Mono throughout, as on rose-startpage — not just for the heading. */
   font-family: var(--bbm-mono);
+  font-size: var(--bbm-base);
 }
 
 .bbm-app *,
@@ -80,6 +102,11 @@ body.bbm-takeover-body {
  * same way. */
 :root {
   --bbm-mono: "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
+  /* rose-startpage's --font-size-base. Its whole scale hangs off this one
+     number: the heading is 2em of it, and titles and entries inherit it
+     outright. Ours was 14px, which is the main reason the two pages did not
+     read the same. Turn this down if 4 columns at 25px wrap too hard. */
+  --bbm-base: 25px;
 }
 
 @font-face {
@@ -93,7 +120,7 @@ body.bbm-takeover-body {
 .bbm-app .bbm-hello {
   margin: 0;
   font-family: var(--bbm-mono);
-  font-size: 30px;
+  font-size: 2em;
   font-weight: normal;
   color: var(--ctp-mauve, #cba6f7);
 }
@@ -170,7 +197,7 @@ body.bbm-takeover-body {
 
 .bbm-app .bbm-col-name {
   margin: 0;
-  font-size: 14px;
+  font-size: 1em;
   font-weight: 700;
   line-height: 2;
   color: var(--ctp-rosewater, #f5e0dc);
@@ -241,7 +268,7 @@ body.bbm-takeover-body {
 .bbm-app .bbm-course-name {
   display: inline;
   margin: 0;
-  font-size: 14px;
+  font-size: 1em;
   font-weight: normal;
   line-height: 1.5;
   color: inherit;

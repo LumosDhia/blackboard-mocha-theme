@@ -98,6 +98,17 @@ one typo of Esprit's own ("Cyber Defense - Systems & Netowrks").
 The last column is the catch-all, so a prefix nobody has seen before lands
 somewhere visible instead of disappearing.
 
+The type scale is rose-startpage's: `--bbm-base` is its `--font-size-base`
+(25px), the heading is `2em` of it, and group titles and entries inherit it
+outright — the startpage sets no font-size on either. That one variable is
+the page's scale; turn it down if four columns at 25px wrap too hard.
+
+`body.bbm-takeover-body::after` is the startpage's CRT dot-grid overlay
+copied across: 1px dots on a 20px grid at 4% opacity, fixed and
+`pointer-events: none`. Its z-index clears this page's own fixed chrome
+rather than using the startpage's 9999, so the dots fall over the dock and
+the task drawer too.
+
 Spacing follows rose-startpage: columns 1.5em apart, and each group title
 carrying the gap beneath it in its own `line-height` (2) rather than in a
 margin. That is what makes a title read as the head of its list instead of as
