@@ -85,7 +85,7 @@
     const ctx = canvas.getContext('2d');
 
     const text = (label || 'Course').trim();
-    const [c1, c2] = BBM_PALETTE.pairFor(text);
+    const [c1, c2] = BBM.pairFor(text);
 
     const gradient = ctx.createLinearGradient(0, 0, width, height);
     gradient.addColorStop(0, c1);

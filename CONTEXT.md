@@ -227,6 +227,27 @@ Three things worth knowing before touching it:
   deliberate — its keepalive polling is what stops the session expiring while
   the page is open.
 
+### Task drawer (tasks.js)
+
+Blackboard's own due-date panel, rebuilt as a hover-out drawer on the right
+edge of the course list. Notes for picking it up:
+
+- **Source is `public/v1/calendars/items`**, GET, ±7 days. The v1 twin
+  (`/learn/api/v1/calendars/duedates`) answers **405, not 404** — the path
+  exists but wants POST, so there is probably a richer, SPA-native due-date
+  endpoint there if the public one ever proves too thin. Not exercised.
+- **Which page has the original panel was never found.** It is not on
+  `/ultra/course`, `/ultra/institution-page`, `/ultra/stream` or
+  `/ultra/grades` — all four were checked live and none render it, presumably
+  because nothing is due. The rebuild follows the screenshot's wording rather
+  than a located source.
+- **The field mapping is the weak spot.** `dueDate → endDate → startDate`,
+  and `calendarName` as the course, come from Blackboard's published schema;
+  with zero items live, none of it has met a real response. Verify when
+  something is finally due.
+- Buckets, empty states, badge, dwell-to-mark-read, accordion and the
+  off-screen/hover transform were all verified live with synthetic items.
+
 ### Untested
 
 - `v1/streams/ultra` (the activity stream) returns 405 on GET — it is a POST

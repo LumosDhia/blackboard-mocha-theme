@@ -52,6 +52,29 @@ course code and class group as separate chips, and a "consulté il y a…" line
 from each membership's `lastAccessed` (which Blackboard's own card grid never
 shows). Clicking a course is a real navigation into the real Blackboard UI.
 
+### Task drawer
+
+Blackboard's "Tâches à accomplir" panel, rebuilt and docked to the right
+edge. It stays off-screen until the cursor reaches the edge, then slides out;
+clicking the handle pins it open (for touch and keyboard). The three sections
+— En retard / À rendre aujourd'hui / À rendre bientôt — collapse
+independently.
+
+The handle carries a bubble with the number of items you have not seen. Seen
+ids live in `localStorage['bbm.tasks.seen']`, and an item counts as seen once
+the drawer has been *held* open for 600ms, so brushing past the edge on the
+way somewhere else doesn't silently clear the badge.
+
+Data is `GET /learn/api/public/v1/calendars/items` over a ±7 day window (the
+endpoint refuses spans over 16 weeks). Items with no date at all are dropped.
+
+⚠️ **The field mapping is unverified against real data.** Every course on
+this account is new and nothing is due yet, so the endpoint returns an empty
+list. The buckets, empty states and badge were exercised with synthetic
+items, but `dueDate → endDate → startDate` and `calendarName`-as-course come
+from Blackboard's published schema, not from a response. Check them the first
+time something is actually due.
+
 **Escape hatch.** The "Blackboard d'origine" button reloads the page with the
 takeover off, so the original course list comes back reskinned as before. It
 sets `sessionStorage['bbm.bypass'] = '1'` and lasts until the tab is closed.

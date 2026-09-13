@@ -295,3 +295,212 @@ body.bbm-takeover-body {
     min-width: 160px;
   }
 }
+
+/* ============================================================ task drawer
+ *
+ * tasks.js — Blackboard's "Tâches à accomplir" panel, docked to the right
+ * edge and hidden until the cursor reaches it.
+ *
+ * The dock is always under the pointer at the right edge: .bbm-dock is a
+ * full-height fixed strip, but only the tab is visible and only the tab
+ * accepts pointer events until the dock is hovered. That way the hidden
+ * drawer never swallows clicks meant for the page behind it.
+ *
+ * Class names avoid "panel" and "sidebar" for the same reason the cards
+ * avoid "card": mocha.css matches both broadly with !important.
+ */
+
+.bbm-dock {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: flex-start;
+  height: 100%;
+  pointer-events: none;
+}
+
+.bbm-dock > * {
+  pointer-events: auto;
+}
+
+/* The edge handle. Sits proud of the drawer and is the only thing visible
+ * when closed. */
+.bbm-dock .bbm-tasks-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  align-self: center;
+  padding: 14px 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ctp-subtext0, #a6adc8);
+  cursor: pointer;
+  background-color: var(--ctp-mantle, #181825);
+  border: 1px solid var(--ctp-surface0, #313244);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.bbm-dock .bbm-tasks-tab:hover {
+  color: var(--ctp-text, #cdd6f4);
+  background-color: var(--ctp-surface0, #313244);
+}
+
+.bbm-dock .bbm-tasks-tab-text {
+  writing-mode: vertical-rl;
+}
+
+/* The unread bubble. Sits in front of the tab label, as asked. */
+.bbm-dock .bbm-tasks-badge {
+  min-width: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  letter-spacing: 0;
+  color: var(--ctp-crust, #11111b);
+  background-color: var(--ctp-red, #f38ba8);
+  border-radius: 9px;
+}
+
+.bbm-dock.bbm-tasks-new .bbm-tasks-tab {
+  color: var(--ctp-text, #cdd6f4);
+  border-color: var(--ctp-red, #f38ba8);
+}
+
+.bbm-dock .bbm-tasks {
+  display: flex;
+  flex-direction: column;
+  width: 312px;
+  height: 100%;
+  padding: 26px 22px;
+  overflow-y: auto;
+  background-color: var(--ctp-mantle, #181825);
+  border-left: 1px solid var(--ctp-surface0, #313244);
+  transform: translateX(100%);
+  transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.bbm-dock:hover .bbm-tasks,
+.bbm-dock:focus-within .bbm-tasks,
+.bbm-dock.bbm-dock-pinned .bbm-tasks {
+  transform: translateX(0);
+}
+
+.bbm-dock .bbm-tasks-head {
+  margin: 0 0 22px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ctp-overlay1, #7f849c);
+}
+
+.bbm-dock .bbm-group {
+  margin-bottom: 10px;
+}
+
+.bbm-dock .bbm-group-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 13px 0;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ctp-text, #cdd6f4);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--ctp-surface0, #313244);
+  text-align: left;
+}
+
+/* Chevron drawn in CSS rather than shipped as an icon font or SVG — it is
+ * two borders and it inherits the text colour for free. */
+.bbm-dock .bbm-chev {
+  width: 9px;
+  height: 9px;
+  margin-right: 3px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+}
+
+.bbm-dock .bbm-group-shut .bbm-chev {
+  transform: rotate(135deg);
+}
+
+.bbm-dock .bbm-group-shut .bbm-group-body,
+.bbm-dock .bbm-group-shut .bbm-group-empty {
+  display: none;
+}
+
+.bbm-dock .bbm-group-empty {
+  margin: 0;
+  padding: 26px 10px 34px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ctp-overlay0, #6c7086);
+}
+
+.bbm-dock .bbm-group-body {
+  margin: 0;
+  padding: 4px 0 14px;
+  list-style: none;
+}
+
+.bbm-dock .bbm-task {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ctp-surface0, #313244);
+}
+
+.bbm-dock .bbm-task:last-child {
+  border-bottom: none;
+}
+
+.bbm-dock .bbm-task-name {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ctp-text, #cdd6f4);
+}
+
+.bbm-dock .bbm-task-line {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--ctp-overlay0, #6c7086);
+}
+
+.bbm-dock .bbm-task-course {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bbm-dock .bbm-task-when {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ctp-subtext0, #a6adc8);
+}
+
+/* Narrow screens: the drawer would cover most of the page, so let it take a
+ * comfortable width rather than a fixed one. */
+@media (max-width: 640px) {
+  .bbm-dock .bbm-tasks {
+    width: min(312px, 86vw);
+  }
+}

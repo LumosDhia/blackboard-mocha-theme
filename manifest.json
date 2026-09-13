@@ -10,14 +10,28 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://esprit.blackboard.com/ultra/course*"],
-      "js": ["boot.js"],
+      "matches": [
+        "https://esprit.blackboard.com/ultra/course*"
+      ],
+      "js": [
+        "boot.js"
+      ],
       "run_at": "document_start"
     },
     {
-      "matches": ["https://esprit.blackboard.com/*"],
-      "css": ["mocha.css", "courselist.css"],
-      "js": ["palette.js", "content.js", "courselist.js"],
+      "matches": [
+        "https://esprit.blackboard.com/*"
+      ],
+      "css": [
+        "mocha.css",
+        "courselist.css"
+      ],
+      "js": [
+        "shared.js",
+        "tasks.js",
+        "content.js",
+        "courselist.js"
+      ],
       "run_at": "document_idle",
       "all_frames": true
     }

@@ -30,11 +30,6 @@
   // with no space, which is why \s* is not \s+. Set to [] to show everything.
   const HIDDEN_TERM_PATTERNS = [/semestre\s*2/i];
 
-  // Esprit suffixes both the course name and the course code with the class
-  // group: "Machine Learning avancé__4CCE14", "ESE.SR-02__4CCE14". Split it
-  // off so the card can show a clean title with the group as its own chip.
-  const GROUP_SEP = '__';
-
   if (!COURSE_LIST_RE.test(location.pathname)) return;
   if (!document.documentElement.classList.contains('bbm-takeover')) return;
 
@@ -71,13 +66,6 @@
     });
     if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
     return res.json();
-  }
-
-  function splitGroup(value) {
-    const raw = (value || '').trim();
-    const at = raw.indexOf(GROUP_SEP);
-    if (at === -1) return { label: raw, group: null };
-    return { label: raw.slice(0, at).trim(), group: raw.slice(at + GROUP_SEP.length).trim() || null };
   }
 
   // "il y a 3 j" etc. Blackboard reports lastAccessed per membership, which
@@ -131,8 +119,8 @@
     const courses = (memberships.results || [])
       .filter((m) => m.course && m.course.name)
       .map((m) => {
-        const name = splitGroup(m.course.name);
-        const code = splitGroup(m.course.courseId);
+        const name = BBM.splitGroup(m.course.name);
+        const code = BBM.splitGroup(m.course.courseId);
         return {
           id: m.course.id,
           title: name.label,
@@ -174,7 +162,7 @@
   // ------------------------------------------------------------------ views
 
   function courseCard(course) {
-    const [c1, c2] = BBM_PALETTE.pairFor(course.title);
+    const [c1, c2] = BBM.pairFor(course.title);
     const seen = relativeTime(course.lastAccessed);
 
     // Gradient only, no text. content.js has to burn the course name into
@@ -289,6 +277,9 @@
     );
 
     mount(app);
+    // The drawer docks itself to <body>, outside .bbm-app, because it is
+    // fixed to the viewport edge rather than part of the page flow.
+    BBM_TASKS.attach();
   }
 
   function renderError(err) {
