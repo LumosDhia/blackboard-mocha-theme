@@ -220,20 +220,22 @@ body [class*="MuiOutlinedInput-root" i] {
  * Modern pass — layout, depth and typography on top of the recolor above.
  * ------------------------------------------------------------------- */
 
+/* Flat: hairline border, no elevation. Hover shifts the border and the
+ * surface a step rather than lifting the card. */
 body .course-element-card {
-  border-radius: 14px !important;
+  border-radius: 12px !important;
   overflow: hidden !important; /* clips the banner to the rounded corners */
-  border: 1px solid var(--ctp-surface0) !important;
+  border: 1px solid #262636 !important;
   background-color: var(--ctp-mantle) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
-  transition: transform 0.18s ease, box-shadow 0.18s ease,
-    border-color 0.18s ease !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease !important;
 }
 
 body .course-element-card:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45) !important;
-  border-color: var(--ctp-surface2) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--ctp-surface1) !important;
+  background-color: #1c1c2b !important;
 }
 
 body .element-details.summary {
@@ -356,6 +358,113 @@ body .button-anchor {
 body .multi-users-title,
 body .view-users {
   color: var(--ctp-overlay0) !important;
+}
+
+/* ---------------------------------------------------------------------
+ * Minimalist pass — remove fills and boxes, keep hairlines and whitespace.
+ * ------------------------------------------------------------------- */
+
+/* The page wrapper keeps a light-mode background that shows through gaps. */
+body .off-canvas-wrap,
+body [class*="off-canvas" i] {
+  background-color: var(--ctp-crust) !important;
+}
+
+/* "Taches a accomplir" panel. Two JSS elements here keep near-white
+ * backgrounds (rgb(248,248,248) and rgb(240,240,240)) under our light text
+ * — the inverse of the dark-on-dark problem, and invisible to an audit
+ * that only looks for dark text. */
+body .todo-panel,
+body .todo-panel [class*="makeStyles" i],
+body .todo-panel [class*="MuiAccordion-root" i],
+body .todo-panel [class*="MuiAccordionDetails-root" i] {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+body .todo-panel [class*="MuiAccordionSummary-root" i] {
+  background-color: transparent !important;
+  border-bottom: 1px solid #262636 !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+}
+
+body .todo-panel [class*="MuiAccordionDetails-root" i] {
+  padding: 14px 2px !important;
+}
+
+body .todo-panel h2,
+body .todo-panel [class*="title" i] {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--ctp-overlay1) !important;
+}
+
+body .todo-panel [class*="MuiAccordionSummary-content" i] {
+  font-size: 13px !important;
+  color: var(--ctp-subtext1) !important;
+}
+
+body .todo-panel [class*="MuiAccordionDetails-root" i] * {
+  color: var(--ctp-overlay0) !important;
+  font-size: 12px !important;
+}
+
+/* Semantic states as coloured text, not solid blocks of colour. */
+body [class*="success" i],
+body [class*="warning" i],
+body [class*="danger" i],
+body [class*="error" i],
+body [class*="info" i] {
+  background-color: transparent !important;
+}
+body [class*="success" i] { color: var(--ctp-green) !important; }
+body [class*="warning" i] { color: var(--ctp-yellow) !important; }
+body [class*="danger" i],
+body [class*="error" i] { color: var(--ctp-red) !important; }
+body [class*="info" i] { color: var(--ctp-sky) !important; }
+
+/* Buttons outlined rather than filled. */
+body button,
+body [role="button"],
+body [class*="btn" i],
+body [class*="button" i] {
+  background-color: transparent !important;
+  border: 1px solid var(--ctp-surface0) !important;
+}
+body button:hover,
+body [role="button"]:hover {
+  background-color: #1c1c2b !important;
+}
+
+body .multi-user-usercard {
+  background: transparent !important;
+}
+
+/* Institution branding: the sidebar's active item and the Assist button are
+ * painted a hardcoded red by Blackboard's own theme stylesheet, which is
+ * injected into the BODY (BB-ROOT-THEME-CSS-INJECTOR) and so comes after
+ * this file, with !important and a four-class selector:
+ *   .color-selection-live-mode .active.base-navigation-button-content.themed-background-primary-alt-fill-only
+ *
+ * Beating that needs more specificity, and the usual `[class][class]`
+ * padding trick does NOT work here — the repeated attribute selectors get
+ * collapsed and the rule still loses. Repeating the class name does work. */
+body
+  .themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--ctp-lavender) !important;
+}
+
+/* Active nav item marked with a rule, not a fill. */
+body
+  a.active.themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only.themed-background-primary-alt-fill-only {
+  border-left: 2px solid var(--ctp-mauve) !important;
 }
 
 /* Toolbar controls hidden by content.js — everything in the course list's
