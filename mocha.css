@@ -1,17 +1,15 @@
 /* Catppuccin Mocha reskin for Blackboard Learn Ultra.
  *
- * Blackboard's real class names weren't inspected live (this was built
- * without a logged-in session), so selectors below are deliberately broad
- * (substring/attribute matches) rather than exact class names, to survive
- * Blackboard's own naming and skin changes. If something on the real page
- * doesn't restyle, open Firefox DevTools, inspect the element, and add a
- * more specific rule here.
+ * The broad substring selectors (`[class*="card" i]` etc.) are the base
+ * layer — they survive Blackboard's own skin changes. The "real markup"
+ * section at the bottom pins the exact class names read off a live,
+ * logged-in esprit.blackboard.com course list (Ultra, 2026-09), for the
+ * spots where the broad rules leave bad contrast.
  *
- * Known limitation: Blackboard Ultra's UI is partly built from custom
- * elements that may use *closed* Shadow DOM. Closed shadow roots can't be
- * styled from a content script at all. content.js injects this same
- * stylesheet into every *open* shadow root it can find, but closed ones
- * are simply out of reach from an extension.
+ * Shadow DOM: the course list uses none — every card is light DOM. Other
+ * Ultra pages may differ, so content.js still injects this stylesheet into
+ * any *open* shadow root it finds. Closed roots remain unreachable from a
+ * content script; there is no way around that.
  */
 
 :root {
@@ -175,10 +173,53 @@ body [class*="info" i] {
   color: var(--ctp-crust) !important;
 }
 
-/* Course thumbnail placeholders injected by content.js */
+/* ---- Real Blackboard Ultra class names (read off the live page) ----
+ *
+ * The generic rules above already give `article.element-card` the surface0
+ * background. These fix the parts they miss or get wrong.
+ */
+
+/* Course id and enrolment status sit at overlay0-ish grey by default, which
+ * is unreadable once the card is dark. */
+body .course-status,
+body .multi-column-course-id,
+body .course-card-term-name {
+  color: var(--ctp-subtext0) !important;
+}
+
+/* Course title link inside the card. */
+body .course-title,
+body .js-course-title-element {
+  color: var(--ctp-lavender) !important;
+}
+
+/* The term/semester separator row above each grid of cards. */
+body .base-courses-container {
+  background-color: var(--ctp-base) !important;
+}
+
+/* Blackboard Ultra renders much of this page with Material-UI and JSS.
+ * Both hardcode near-black text (rgb(38,38,38)) that the generic rules
+ * above miss — `bdi` isn't in the text-element list, and MUI renders its
+ * selects as <div>, not <select>. The JSS suffix (makeStylesbaseText-0-2-191)
+ * changes between Blackboard builds, so match the stable prefix only. */
+body bdi,
+body [class*="makeStyles" i],
+body [class*="MuiTypography" i],
+body [class*="MuiSelect" i],
+body [class*="MuiInputBase-input" i] {
+  color: var(--ctp-text) !important;
+}
+
+body [class*="MuiInputBase-root" i],
+body [class*="MuiOutlinedInput-root" i] {
+  background-color: var(--ctp-surface0) !important;
+}
+
+/* Course thumbnail placeholders injected by content.js.
+ * These are background-images on `.course-banner` (a div) — NOT an <img> —
+ * so no object-fit/width/height here: that would override Blackboard's own
+ * banner sizing. content.js sets the background properties inline. */
 .bbm-thumb-placeholder {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-  display: block;
+  background-color: var(--ctp-surface1) !important;
 }
