@@ -25,8 +25,8 @@
   const BYPASS_KEY = 'bbm.bypass';
   const COURSE_LIST_RE = /^\/ultra\/course\/?$/;
 
-  // The handle set inside the Japanese corner brackets of the welcome line.
-  // Deliberately not the API's name.given — that is the line below it.
+  // The handle set inside the Japanese corner brackets of the heading,
+  // mirroring rose-startpage's `ようこそ『Rose』`.
   const HANDLE = 'LumosDhia';
 
   // Same rule as content.js's HIDDEN_TERM_PATTERNS, matched against the term
@@ -121,8 +121,9 @@
   // ------------------------------------------------------------------- data
 
   async function load() {
-    const [me, memberships, terms] = await Promise.all([
-      api('/learn/api/public/v1/users/me'),
+    // users/me is not fetched: it was only ever read for the greeting line,
+    // which the heading above has replaced.
+    const [memberships, terms] = await Promise.all([
       // expand=course folds the whole course record into each membership, so
       // the entire list is one request rather than 1 + N.
       api('/learn/api/public/v1/users/me/courses?expand=course&limit=200'),
@@ -150,7 +151,7 @@
         };
       });
 
-    return { me, courses, termById };
+    return { courses, termById };
   }
 
   // Courses still drop out by term first — hiding Semestre 2 is a separate,
@@ -191,13 +192,12 @@
       el('h3', { class: 'bbm-course-name', text: course.title }),
       // The one exception: an unavailable course still has to say so, or the
       // card is a link that quietly goes nowhere useful.
-      !course.available && el('span', { class: 'bbm-chip bbm-chip-warn', text: 'Indisponible' })
+      !course.available && el('span', { class: 'bbm-chip-warn', text: 'Indisponible' })
     );
   }
 
-  function render({ me, courses, termById }) {
+  function render({ courses, termById }) {
     const columns = groupByCategory(courses, termById);
-    const given = (me.name && me.name.given) || '';
 
     const search = el('input', {
       class: 'bbm-search',
@@ -253,8 +253,7 @@
           // おかえり — "welcome back". 『』 are Japanese corner brackets, the
           // conventional quoting marks around a name; they are single
           // characters, not two angle brackets.
-          el('p', { class: 'bbm-hello', lang: 'ja', text: `おかえり『${HANDLE}』` }),
-          el('h1', { class: 'bbm-greeting', text: given ? `Bonjour, ${given}` : 'Mes cours' })
+          el('h1', { class: 'bbm-hello', lang: 'ja', text: `おかえり『${HANDLE}』` })
         ),
         el(
           'div',
@@ -288,7 +287,7 @@
         el(
           'div',
           { class: 'bbm-failure' },
-          el('h1', { class: 'bbm-greeting', text: 'Chargement impossible' }),
+          el('h1', { class: 'bbm-failure-head', text: 'Chargement impossible' }),
           el('p', {
             class: 'bbm-failure-text',
             text: "La liste des cours n'a pas pu être récupérée depuis l'API de Blackboard.",

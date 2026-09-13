@@ -6,7 +6,7 @@
  * Class names deliberately avoid the substrings mocha.css matches broadly
  * — "card", "header", "title", "error", "primary" and friends. Those rules
  * carry !important and would otherwise paint over this UI (a
- * `body [class*="card" i]` background would flatten the course gradients).
+ * `body [class*="card" i]` background would repaint every course card).
  * Hence .bbm-course rather than .bbm-card, .bbm-top rather than .bbm-header.
  * Every selector is still scoped under .bbm-app so it beats mocha.css's
  * element-level rules (body a, body button, body h1) on specificity.
@@ -67,26 +67,30 @@ body.bbm-takeover-body {
   gap: 4px;
 }
 
-/* おかえり『LumosDhia』 — the welcome line above the name. Monospace and
- * mauve, matching the reference. The corner brackets 『』 are full-width CJK
- * characters, so they only sit correctly when a font with real CJK coverage
- * is reached; the stack below ends in a generic monospace so the brackets
- * still render rather than dropping to tofu. */
-.bbm-app .bbm-hello {
-  margin: 0 0 6px;
-  font-family: "JetBrains Mono", "Cascadia Code", "Noto Sans Mono CJK JP",
-    ui-monospace, monospace;
-  font-size: 15px;
-  letter-spacing: 0.02em;
-  color: var(--ctp-mauve, #cba6f7);
+/* おかえり『LumosDhia』 — the page heading, matching rose-startpage's
+ * `ようこそ『Rose』`: same font stack, same mauve, same 『』 corner brackets.
+ *
+ * The bundled woff2 is that project's own subset, and it holds exactly 70
+ * codepoints — Latin, digits, and a handful of symbols. It has no Japanese
+ * in it and not even the brackets, so おかえり and 『』 come from the generic
+ * `monospace` fallback while only the handle renders in JetBrains Mono.
+ * That is not a shortcoming of the subset: JetBrains Mono has no CJK
+ * coverage to begin with, so the startpage resolves those characters the
+ * same way. */
+@font-face {
+  font-family: "JetBrainsMonoNLNerdFontMono";
+  src: url("fonts/JetBrainsMonoNLNerdFontMono-Regular.subset.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-.bbm-app .bbm-greeting {
+.bbm-app .bbm-hello {
   margin: 0;
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ctp-text, #cdd6f4);
+  font-family: "JetBrainsMonoNLNerdFontMono", "JetBrains Mono", monospace;
+  font-size: 30px;
+  font-weight: normal;
+  color: var(--ctp-mauve, #cba6f7);
 }
 
 .bbm-app .bbm-search {
@@ -232,6 +236,13 @@ body.bbm-takeover-body {
   max-width: 560px;
   margin: 80px auto;
   text-align: center;
+}
+
+.bbm-app .bbm-failure-head {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ctp-text, #cdd6f4);
 }
 
 .bbm-app .bbm-failure-text {

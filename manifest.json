@@ -40,7 +40,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "rail-art.jpg"
+        "rail-art.jpg",
+        "fonts/JetBrainsMonoNLNerdFontMono-Regular.subset.woff2"
       ],
       "matches": [
         "https://esprit.blackboard.com/*"

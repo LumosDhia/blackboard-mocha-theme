@@ -51,9 +51,19 @@ per Blackboard build, AngularJS binding course titles after first paint, the
 dark-on-dark contrast audit. The REST shapes are versioned and move far more
 slowly than the markup.
 
-The header is `おかえり『LumosDhia』` — "welcome back", with the handle in
-Japanese corner brackets — above the Blackboard account's own name. The
-handle is the `HANDLE` constant in `courselist.js`. There is no course count.
+The page heading is `おかえり『LumosDhia』` — "welcome back", with the handle
+in Japanese corner brackets — mirroring rose-startpage's `ようこそ『Rose』`,
+down to the font stack and the mauve. The handle is the `HANDLE` constant in
+`courselist.js`. There is no course count and no name line.
+
+`fonts/JetBrainsMonoNLNerdFontMono-Regular.subset.woff2` is copied from that
+project. Be aware it is a **subset of 70 codepoints** — Latin, digits and a
+few symbols. It carries no Japanese and not even the 『』 brackets, so those
+characters come from the generic `monospace` fallback and only the handle
+renders in JetBrains Mono. That is not a defect in the subset: JetBrains Mono
+has no CJK coverage at all, so rose-startpage resolves them the same way. If
+you want the kana in a specific face, add it to the stack ahead of
+`monospace` — re-subsetting this file cannot help.
 
 What the page gives you: courses split into four columns by subject and a
 live search box. A card is the course's full name and nothing else — no
