@@ -52,6 +52,20 @@ course code and class group as separate chips, and a "consulté il y a…" line
 from each membership's `lastAccessed` (which Blackboard's own card grid never
 shows). Clicking a course is a real navigation into the real Blackboard UI.
 
+### Navigation rail
+
+`rail.js` puts Blackboard's primary navigation down the left edge, so the
+taken-over page still has a way out to Calendrier, Messages, Notes and the
+rest. Always visible; below 900px it collapses to an icon-only rail, with the
+labels kept in the DOM for screen readers rather than dropped.
+
+Every href was read off the live page rather than inferred from the label —
+most are guessable, but **Assist is `/ultra/integration/bbAssist`**, which is
+not, and a guess there would have produced a link that silently 404s.
+
+Déconnexion is deliberately absent, matching `content.js`'s existing choice
+to hide it (see below). Add an entry to `ITEMS` in `rail.js` if you want it.
+
 ### Task drawer
 
 Blackboard's "Tâches à accomplir" panel, rebuilt and docked to the right

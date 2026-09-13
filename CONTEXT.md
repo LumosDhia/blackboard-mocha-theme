@@ -227,6 +227,23 @@ Three things worth knowing before touching it:
   deliberate — its keepalive polling is what stops the session expiring while
   the page is open.
 
+### Navigation rail (rail.js)
+
+Blackboard's primary nav, rebuilt down the left edge of the taken-over list.
+Verified live: 8 rows, icons drawn, `Cours` correctly marked active from
+`location.pathname`, and the icon-only collapse under 900px keeps the labels
+in the DOM (`position: absolute` clip, not `display: none`).
+
+- **Real hrefs, not guessed ones.** `Assist` is `/ultra/integration/bbAssist`
+  — nothing about the label implies that path. The other seven are
+  `/ultra/{institution-page,stream,course,calendar,messages,grades,tools}`.
+- **The body offset survives the cascade.** `.bbm-takeover-body` sets
+  `padding: 0` and `.bbm-railed` sets `padding-left`; both are single-class
+  selectors on `<body>`, so this only works because the rail block sits
+  *later* in `courselist.css`. Confirmed computing to 232px with both classes
+  applied. Moving that block above the takeover rules would silently break
+  the layout.
+
 ### Task drawer (tasks.js)
 
 Blackboard's own due-date panel, rebuilt as a hover-out drawer on the right

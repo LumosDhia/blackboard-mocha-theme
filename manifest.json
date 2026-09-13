@@ -28,6 +28,7 @@
       ],
       "js": [
         "shared.js",
+        "rail.js",
         "tasks.js",
         "content.js",
         "courselist.js"

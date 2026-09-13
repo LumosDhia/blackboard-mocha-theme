@@ -277,8 +277,9 @@
     );
 
     mount(app);
-    // The drawer docks itself to <body>, outside .bbm-app, because it is
-    // fixed to the viewport edge rather than part of the page flow.
+    // Both of these fix themselves to a viewport edge and append to <body>,
+    // outside .bbm-app, rather than joining the page flow.
+    BBM_RAIL.attach();
     BBM_TASKS.attach();
   }
 
