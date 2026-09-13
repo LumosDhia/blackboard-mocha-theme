@@ -30,6 +30,7 @@
         "shared.js",
         "rail.js",
         "tasks.js",
+        "chrome.js",
         "content.js",
         "courselist.js"
       ],

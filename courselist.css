@@ -798,3 +798,16 @@ body .bbm-restore {
 body .bbm-restore:hover {
   background-color: var(--ctp-lavender, #b4befe) !important;
 }
+
+/* ------------------------------------------------- native nav, on Ultra
+ *
+ * chrome.js finds Blackboard's own primary navigation by walking up from
+ * its real nav links (hrefs, not class names — the sidebar's JSS classes
+ * carry build-varying suffixes) and tags the container with this class. It
+ * is hidden rather than removed so nothing Blackboard's SPA still holds a
+ * reference to disappears from under it.
+ */
+
+body .bbm-native-nav {
+  display: none !important;
+}

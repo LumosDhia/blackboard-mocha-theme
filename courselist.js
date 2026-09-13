@@ -322,8 +322,9 @@
     mount(app);
     // Both of these fix themselves to a viewport edge and append to <body>,
     // outside .bbm-app, rather than joining the page flow.
-    const rail = BBM_RAIL.attach();
-    BBM_TASKS.attach(rail.tasks);
+    // After mount(), never before: mount() replaces <body>'s children, so
+    // chrome appended earlier would be thrown away with Blackboard's DOM.
+    BBM_CHROME.ensure();
   }
 
   function renderError(err) {
