@@ -36,6 +36,25 @@ This lasts until Firefox restarts. To make it permanent, either:
   - Re-scans on every DOM mutation (debounced), since Blackboard Ultra loads
     course cards asynchronously as an SPA.
 
+## Hiding a term (semester)
+
+`content.js` hides Semestre 2 out of the box:
+
+```js
+const HIDDEN_TERM_PATTERNS = [/semestre\s*2/i];
+```
+
+Each entry is matched case-insensitively against the term header text on the
+course list (`.course-card-term-name`). The header and every course card
+under it are hidden, down to the next header. Set the array to `[]` to show
+everything again, or add another pattern to hide more.
+
+Matching is on the visible label rather than Blackboard's internal term
+class (`term-_12_1`), because that id is specific to an account and year
+while the label is what you actually see. Note that Blackboard's own
+"N résultats" counter above the list is its own and still counts hidden
+courses.
+
 ## Known limitations
 
 - **Closed shadow DOM.** If any part of Blackboard Ultra's UI uses *closed*

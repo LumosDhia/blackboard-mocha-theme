@@ -216,6 +216,13 @@ body [class*="MuiOutlinedInput-root" i] {
   background-color: var(--ctp-surface0) !important;
 }
 
+/* Terms hidden by content.js (HIDDEN_TERM_PATTERNS) — the term header and
+ * all of its course cards. Blackboard's own "N résultats" count above the
+ * list is its own and still counts hidden courses. */
+.bbm-hidden-term {
+  display: none !important;
+}
+
 /* Course thumbnail placeholders injected by content.js.
  * These are background-images on `.course-banner` (a div) — NOT an <img> —
  * so no object-fit/width/height here: that would override Blackboard's own

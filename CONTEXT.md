@@ -82,6 +82,35 @@ so the manual DevTools-console-snippet route in the old notes is no longer
 needed. If picking this up on the Windows ARM64 machine again, expect the
 old failure and use a Linux/x64 box instead.
 
+## Term hiding
+
+`content.js` hides whole terms via `HIDDEN_TERM_PATTERNS` (currently
+Semestre 2). The course list is a flat `.course-org-list`:
+
+```
+div.course-card-term-name        <- "Semestre2"
+div.default-group.term-_12_1     <- x11 course cards
+div.course-card-term-name        <- "Semestre 1"
+div.default-group.term-_11_1     <- x18 course cards
+```
+
+so a term is hidden by walking siblings from its header to the next header
+and adding `.bbm-hidden-term`. Verified live: 12 elements hidden, 18 cards
+left visible.
+
+## Gotcha: AngularJS binds late
+
+The course list is AngularJS (`ng-bind="baseCourses.getCourseName(membership)"`).
+Immediately after navigation the cards exist but every `h4.js-course-title-element`
+is **empty** — all 29 titles were blank on first paint. `applyPlaceholder`
+bails when the title is still empty (otherwise every card gets an identical
+"Course" placeholder) and the MutationObserver re-applies once Angular binds.
+`hideTerms` does the same for empty term labels.
+
+Cards also bind lazily: only the ~11 on-screen cards had titles at first;
+the rest bound while scrolling. Anything testing this needs to wait for
+binding, not just for the elements to exist.
+
 ## Still untested
 
 - The extension has only been verified by injecting its CSS/JS into a live

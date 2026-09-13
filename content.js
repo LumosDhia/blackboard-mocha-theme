@@ -37,6 +37,13 @@
     '.course-title',
   ];
 
+  // Course terms to hide from the course list, matched case-insensitively
+  // against the `.course-card-term-name` header text. Matching by label
+  // rather than by Blackboard's internal term class (`term-_12_1`), since
+  // that id is account- and year-specific while the label is what's on
+  // screen. Set to [] to show everything.
+  const HIDDEN_TERM_PATTERNS = [/semestre\s*2/i];
+
   const MOCHA_PAIRS = [
     ['#f38ba8', '#eba0ac'], // red -> maroon
     ['#fab387', '#f9e2af'], // peach -> yellow
@@ -154,6 +161,25 @@
     processedCards.add(card);
   }
 
+  // The course list is a flat `.course-org-list`: a `.course-card-term-name`
+  // header, then that term's cards as sibling `.default-group` divs, then
+  // the next header. So a term is hidden by walking siblings from its header
+  // up to the next header.
+  function hideTerms(root) {
+    root.querySelectorAll('.course-card-term-name').forEach((header) => {
+      const label = header.textContent.trim();
+      if (!label) return; // AngularJS hasn't bound the label yet
+      if (!HIDDEN_TERM_PATTERNS.some((re) => re.test(label))) return;
+
+      header.classList.add('bbm-hidden-term');
+      let node = header.nextElementSibling;
+      while (node && !node.classList.contains('course-card-term-name')) {
+        node.classList.add('bbm-hidden-term');
+        node = node.nextElementSibling;
+      }
+    });
+  }
+
   function scanForCards(root) {
     for (const sel of CARD_SELECTORS) {
       root.querySelectorAll(sel).forEach(applyPlaceholder);
@@ -188,6 +214,7 @@
   }
 
   function fullScan() {
+    hideTerms(document);
     scanForCards(document);
     walkForShadowRoots(document.documentElement);
   }
