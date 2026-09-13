@@ -69,21 +69,113 @@ var BBM_RAIL = (() => {
     const link = document.createElement('a');
     link.className = `bbm-rail-item${here ? ' bbm-rail-on' : ''}`;
     link.href = ORIGIN + item.path;
+    link.setAttribute('aria-label', item.label);
     if (here) link.setAttribute('aria-current', 'page');
+
+    // The glyph is wrapped because magnification scales it and only it — the
+    // label must not scale with the icon, and the row itself carries the
+    // separate vertical displacement.
+    const glyph = document.createElement('span');
+    glyph.className = 'bbm-rail-glyph';
+    glyph.append(icon(item.icon));
 
     const label = document.createElement('span');
     label.className = 'bbm-rail-label';
     label.textContent = item.label;
 
-    link.append(icon(item.icon), label);
+    link.append(glyph, label);
     return link;
+  }
+
+  // macOS-dock magnification, vertical. Rather than scaling each icon in
+  // place — which makes them overlap — the row heights are re-stacked at
+  // their magnified sizes and every row is offset to its new position, so
+  // neighbours are pushed apart the way the real dock pushes them.
+  //
+  // The item nearest the cursor is then re-anchored to where it started,
+  // otherwise the whole column visibly slides up or down as the stack grows.
+  const MAX_SCALE = 1.75;
+  const RADIUS = 118;   // px of influence either side of the cursor
+  const FALLOFF = 1.6;  // >1 tightens the peak, closer to the real dock
+
+  function magnifier(rail, items) {
+    if (!items.length) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let frame = null;
+
+    // offsetTop/offsetHeight are unaffected by transforms, so these stay
+    // correct no matter what state the dock is in when we measure.
+    function metrics() {
+      const railTop = rail.getBoundingClientRect().top;
+      const size = items[0].offsetHeight;
+      return {
+        size,
+        tops: items.map((el) => railTop + el.offsetTop),
+      };
+    }
+
+    function scaleFor(distance) {
+      if (distance >= RADIUS) return 1;
+      return 1 + (MAX_SCALE - 1) * Math.pow(1 - distance / RADIUS, FALLOFF);
+    }
+
+    function apply(pointerY) {
+      const { size, tops } = metrics();
+      const scales = tops.map((top) => scaleFor(Math.abs(pointerY - (top + size / 2))));
+
+      // Re-stack at magnified heights.
+      const stacked = [];
+      let cursor = tops[0];
+      for (let i = 0; i < items.length; i++) {
+        stacked.push(cursor);
+        cursor += size * scales[i];
+      }
+
+      // Anchor the row under the cursor so the column doesn't drift.
+      let nearest = 0;
+      let best = Infinity;
+      tops.forEach((top, i) => {
+        const d = Math.abs(pointerY - (top + size / 2));
+        if (d < best) {
+          best = d;
+          nearest = i;
+        }
+      });
+      const shift = tops[nearest] + size / 2 - (stacked[nearest] + (size * scales[nearest]) / 2);
+
+      items.forEach((el, i) => {
+        el.style.setProperty('--s', scales[i].toFixed(3));
+        el.style.setProperty('--dy', `${(stacked[i] + shift - tops[i]).toFixed(1)}px`);
+      });
+    }
+
+    function clear() {
+      items.forEach((el) => {
+        el.style.setProperty('--s', '1');
+        el.style.setProperty('--dy', '0px');
+      });
+    }
+
+    rail.addEventListener('pointermove', (event) => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => apply(event.clientY));
+    });
+
+    rail.addEventListener('pointerleave', () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = null;
+      clear();
+    });
   }
 
   function attach() {
     const rail = document.createElement('nav');
     rail.className = 'bbm-rail';
     rail.setAttribute('aria-label', 'Navigation principale');
-    for (const item of ITEMS) rail.append(row(item, location.pathname));
+    const items = ITEMS.map((item) => row(item, location.pathname));
+    for (const item of items) rail.append(item);
+    magnifier(rail, items);
 
     // Decorative only: aria-hidden, and not a link, so it is invisible to
     // screen readers and to keyboard tabbing through the nav.

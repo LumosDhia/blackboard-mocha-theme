@@ -51,6 +51,10 @@ per Blackboard build, AngularJS binding course titles after first paint, the
 dark-on-dark contrast audit. The REST shapes are versioned and move far more
 slowly than the markup.
 
+The header is `おかえり『LumosDhia』` — "welcome back", with the handle in
+Japanese corner brackets — above the Blackboard account's own name. The
+handle is the `HANDLE` constant in `courselist.js`. There is no course count.
+
 What the page gives you: courses split into four columns by subject and a
 live search box. A card is the course's full name and nothing else — no
 thumbnail, no code chip, no last-accessed line. The name is never truncated;
@@ -92,15 +96,38 @@ is. `BBM.pairFor` is still used by `content.js` for the reskinned pages.
 
 ### Navigation rail
 
-`rail.js` puts Blackboard's primary navigation down the left edge, so the
-taken-over page still has a way out to Calendrier, Messages, Notes and the
-rest. Always visible; below 900px it collapses to an icon-only rail, with the
-labels kept in the DOM for screen readers rather than dropped.
+`rail.js` puts Blackboard's primary navigation down the left edge as a
+vertical dock, so the taken-over page still has a way out to Calendrier,
+Messages, Notes and the rest.
 
-It has no background, border or row separators of its own — it sits on the
-page background and is held together by spacing and text weight, so the eye
-goes to the course grid rather than to a slab of chrome down the side. The
-current page is the one accent: bolder label, mauve icon.
+Icons only, on the page background with no surface of its own. Each label
+appears beside its icon on hover — the label gets a small pill because it
+overlays the course columns, where bare text would be unreadable. The current
+page is the one accent: a mauve icon.
+
+**Magnification** is macOS-dock style, in `magnifier()`. Rather than scaling
+each icon in place — which makes them overlap — the rows are re-stacked at
+their magnified heights and each is offset to its new position, so
+neighbours are pushed apart the way the real dock pushes them. The row
+nearest the cursor is then re-anchored to where it started, or the whole
+column visibly slides as the stack grows.
+
+Two knobs at the top of `rail.js`: `MAX_SCALE` (1.75) and `RADIUS` (118px of
+influence either side of the cursor); `FALLOFF` above 1 tightens the peak.
+
+Two details worth keeping if you edit it:
+
+- The dock has **56px of top padding purely as headroom**. Magnifying a row
+  near the top shifts the rows above it upward by up to half the column's
+  total growth — about 36px — and with less padding the first icon is pushed
+  off the top of the viewport. The art's `margin-top` is the same idea at the
+  other end.
+- Scales are computed against each row's **untransformed** `offsetTop`, which
+  transforms do not affect. That is what stops the effect oscillating: a
+  magnified row moving out from under the cursor cannot feed back into the
+  next frame's measurement.
+
+Magnification is skipped outright under `prefers-reduced-motion`.
 
 Every href was read off the live page rather than inferred from the label —
 most are guessable, but **Assist is `/ultra/integration/bbAssist`**, which is

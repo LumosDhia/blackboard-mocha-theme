@@ -67,18 +67,26 @@ body.bbm-takeover-body {
   gap: 4px;
 }
 
+/* おかえり『LumosDhia』 — the welcome line above the name. Monospace and
+ * mauve, matching the reference. The corner brackets 『』 are full-width CJK
+ * characters, so they only sit correctly when a font with real CJK coverage
+ * is reached; the stack below ends in a generic monospace so the brackets
+ * still render rather than dropping to tofu. */
+.bbm-app .bbm-hello {
+  margin: 0 0 6px;
+  font-family: "JetBrains Mono", "Cascadia Code", "Noto Sans Mono CJK JP",
+    ui-monospace, monospace;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--ctp-mauve, #cba6f7);
+}
+
 .bbm-app .bbm-greeting {
   margin: 0;
   font-size: 26px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ctp-text, #cdd6f4);
-}
-
-.bbm-app .bbm-count {
-  margin: 0;
-  font-size: 13px;
-  color: var(--ctp-overlay1, #7f849c);
 }
 
 .bbm-app .bbm-search {
@@ -493,25 +501,25 @@ body.bbm-takeover-body {
   }
 }
 
-/* ============================================================== nav rail
+/* ============================================================== nav dock
  *
- * rail.js — Blackboard's primary navigation, rebuilt for the taken-over
- * course list. Fixed to the left edge, always visible; the page is pushed
- * clear of it with padding on .bbm-railed rather than a margin on .bbm-app,
- * so the list stays centred in the space that's left.
+ * rail.js — Blackboard's primary navigation as a vertical dock: icons only,
+ * no background of its own, each label revealed on hover, and macOS-style
+ * magnification driven from rail.js.
  *
- * Deliberately not a surface: no background of its own, no dividing border,
- * no row separators. It sits on the page background and is held together by
- * spacing and text weight alone, so the eye goes to the course grid rather
- * than to a slab of chrome down the side.
+ * Two transforms, on two different elements, deliberately:
+ *   --s  scales .bbm-rail-glyph  — the icon grows, the label does not.
+ *   --dy shifts .bbm-rail-item   — the row moves, pushed aside by whichever
+ *                                  neighbour is currently magnified.
+ * Putting both on one element would scale the label along with the icon and
+ * drag the tooltip out of position.
  *
  * Class names avoid "nav" — mocha.css matches [class*="nav" i] with
  * !important and would repaint the whole thing.
  */
 
 :root {
-  --bbm-rail-w: 232px;
-  --bbm-rail-w-narrow: 62px;
+  --bbm-rail-w: 76px;
 }
 
 body.bbm-railed {
@@ -527,10 +535,14 @@ body.bbm-railed {
   flex-direction: column;
   width: var(--bbm-rail-w);
   height: 100%;
-  /* No bottom padding: the art is the last child and should run flush to the
-     bottom edge of the viewport rather than float above a strip of base. */
-  padding: 14px 0 0;
-  overflow-y: auto;
+  /* Headroom, not decoration. Magnifying a row near the top shifts the rows
+     above it upward — by up to half the column's total growth, ~36px at the
+     current MAX_SCALE — and with only the old 14px of padding the first icon
+     was pushed off the top of the viewport. */
+  padding: 56px 0 0;
+  /* Visible, not auto: magnified icons and the hover labels both grow past
+     the dock's own width, and a scroll container would clip them. */
+  overflow: visible;
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
@@ -538,63 +550,69 @@ body.bbm-railed {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
   flex-shrink: 0;
-  padding: 12px 18px;
-  font-size: 14px;
-  text-decoration: none;
+  height: 46px;
   color: var(--ctp-overlay1, #7f849c);
-  transition: color 120ms ease;
+  text-decoration: none;
+  transform: translateY(var(--dy, 0px));
+  transition: transform 130ms ease-out, color 120ms ease;
 }
 
 .bbm-rail .bbm-rail-item:hover {
   color: var(--ctp-text, #cdd6f4);
 }
 
-/* Current page. With no backgrounds in play the active row is carried by
- * weight and colour alone — the one accent in the rail. */
-.bbm-rail .bbm-rail-on {
-  font-weight: 600;
-  color: var(--ctp-text, #cdd6f4);
-}
-
-.bbm-rail .bbm-rail-on .bbm-rail-icon {
-  color: var(--ctp-mauve, #cba6f7);
+.bbm-rail .bbm-rail-glyph {
+  display: flex;
+  /* Grows rightward and stays vertically centred on its row. */
+  transform-origin: left center;
+  transform: scale(var(--s, 1));
+  transition: transform 130ms ease-out;
 }
 
 .bbm-rail .bbm-rail-icon {
-  flex-shrink: 0;
-  width: 21px;
-  height: 21px;
+  width: 22px;
+  height: 22px;
 }
 
+/* Current page: the one accent in the dock. */
+.bbm-rail .bbm-rail-on {
+  color: var(--ctp-mauve, #cba6f7);
+}
+
+/* The label, revealed beside the icon on hover. It needs a surface of its
+ * own — unlike the dock, it overlays the course columns, and bare text on
+ * top of cards would be unreadable. */
 .bbm-rail .bbm-rail-label {
-  line-height: 1.3;
+  position: absolute;
+  left: calc(100% + 4px);
+  padding: 6px 11px;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--ctp-text, #cdd6f4);
+  background-color: var(--ctp-surface0, #313244);
+  border-radius: 7px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 130ms ease, transform 130ms ease;
+  pointer-events: none;
 }
 
-/* Not enough width for labels: collapse to an icon rail. The labels stay in
- * the DOM for screen readers rather than being dropped. */
-@media (max-width: 900px) {
-  body.bbm-railed {
-    padding-left: var(--bbm-rail-w-narrow);
-  }
+.bbm-rail .bbm-rail-item:hover .bbm-rail-label,
+.bbm-rail .bbm-rail-item:focus-visible .bbm-rail-label {
+  opacity: 1;
+  transform: translateX(0);
+}
 
-  .bbm-rail {
-    width: var(--bbm-rail-w-narrow);
-  }
-
-  .bbm-rail .bbm-rail-item {
-    justify-content: center;
-    padding: 12px 0;
-  }
-
+/* Magnification is a pointer affordance; it is skipped outright in rail.js
+ * under reduced motion, and the transitions go with it. */
+@media (prefers-reduced-motion: reduce) {
+  .bbm-rail .bbm-rail-item,
+  .bbm-rail .bbm-rail-glyph,
   .bbm-rail .bbm-rail-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    transition: none;
   }
 }
 
@@ -620,7 +638,9 @@ body.bbm-railed {
   position: relative;
   flex: 1 1 auto;
   min-height: 150px;
-  margin-top: 18px;
+  /* Same reason as the dock's top padding, at the other end: magnifying a
+     row near the bottom pushes it down into whatever follows. */
+  margin-top: 46px;
   background-image: url("rail-art.jpg");
   background-size: cover;
   background-position: center 30%;
@@ -639,8 +659,9 @@ body.bbm-railed {
   );
 }
 
-/* Collapsed icon rail: 62px is too narrow for the art to read as anything. */
-@media (max-width: 900px) {
+/* On a phone the dock plus one column of cards is already tight; the art is
+ * the first thing that should go. */
+@media (max-width: 640px) {
   .bbm-rail .bbm-rail-art {
     display: none;
   }

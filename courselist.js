@@ -25,6 +25,10 @@
   const BYPASS_KEY = 'bbm.bypass';
   const COURSE_LIST_RE = /^\/ultra\/course\/?$/;
 
+  // The handle set inside the Japanese corner brackets of the welcome line.
+  // Deliberately not the API's name.given — that is the line below it.
+  const HANDLE = 'LumosDhia';
+
   // Same rule as content.js's HIDDEN_TERM_PATTERNS, matched against the term
   // name from /learn/api/v1/terms. Note the live data spells it "Semestre2"
   // with no space, which is why \s* is not \s+. Set to [] to show everything.
@@ -193,7 +197,6 @@
 
   function render({ me, courses, termById }) {
     const columns = groupByCategory(courses, termById);
-    const visible = columns.reduce((n, c) => n + c.courses.length, 0);
     const given = (me.name && me.name.given) || '';
 
     const search = el('input', {
@@ -202,11 +205,6 @@
       placeholder: 'Rechercher un cours…',
       'aria-label': 'Rechercher un cours',
       autocomplete: 'off',
-    });
-
-    const count = el('p', {
-      class: 'bbm-count',
-      text: `${visible} cours`,
     });
 
     // One column per category. A column with nothing in it still renders its
@@ -240,7 +238,6 @@
         section.classList.toggle('bbm-col-empty', inSection === 0);
         shown += inSection;
       }
-      count.textContent = q ? `${shown} sur ${visible} cours` : `${visible} cours`;
       empty.hidden = shown !== 0;
     });
 
@@ -253,8 +250,11 @@
         el(
           'div',
           { class: 'bbm-top-left' },
-          el('h1', { class: 'bbm-greeting', text: given ? `Bonjour, ${given}` : 'Mes cours' }),
-          count
+          // おかえり — "welcome back". 『』 are Japanese corner brackets, the
+          // conventional quoting marks around a name; they are single
+          // characters, not two angle brackets.
+          el('p', { class: 'bbm-hello', lang: 'ja', text: `おかえり『${HANDLE}』` }),
+          el('h1', { class: 'bbm-greeting', text: given ? `Bonjour, ${given}` : 'Mes cours' })
         ),
         el(
           'div',
