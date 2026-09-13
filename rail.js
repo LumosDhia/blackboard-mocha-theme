@@ -38,7 +38,7 @@ var BBM_RAIL = (() => {
     { path: '/ultra/calendar', label: 'Calendrier', icon: 'calendar' },
     { path: '/ultra/messages', label: 'Messages', icon: 'messages' },
     { path: '/ultra/grades', label: 'Notes', icon: 'grades' },
-    { path: '/ultra/integration/bbAssist', label: 'Assist', icon: 'assist', boxed: true },
+    { path: '/ultra/integration/bbAssist', label: 'Assist', icon: 'assist' },
     { path: '/ultra/tools', label: 'Outils', icon: 'tools' },
   ];
 
@@ -67,7 +67,7 @@ var BBM_RAIL = (() => {
   function row(item, currentPath) {
     const here = currentPath === item.path;
     const link = document.createElement('a');
-    link.className = `bbm-rail-item${item.boxed ? ' bbm-rail-boxed' : ''}${here ? ' bbm-rail-on' : ''}`;
+    link.className = `bbm-rail-item${here ? ' bbm-rail-on' : ''}`;
     link.href = ORIGIN + item.path;
     if (here) link.setAttribute('aria-current', 'page');
 

@@ -59,6 +59,11 @@ taken-over page still has a way out to Calendrier, Messages, Notes and the
 rest. Always visible; below 900px it collapses to an icon-only rail, with the
 labels kept in the DOM for screen readers rather than dropped.
 
+It has no background, border or row separators of its own — it sits on the
+page background and is held together by spacing and text weight, so the eye
+goes to the course grid rather than to a slab of chrome down the side. The
+current page is the one accent: bolder label, mauve icon.
+
 Every href was read off the live page rather than inferred from the label —
 most are guessable, but **Assist is `/ultra/integration/bbAssist`**, which is
 not, and a guess there would have produced a link that silently 404s.
