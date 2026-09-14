@@ -63,10 +63,21 @@ ASCII, Latin-1 (French accents), curly quotes, the bullet and the ellipsis —
 
 It is **not** rose-startpage's own subset, which was tried first and caused
 visibly wrong word spacing: that file has 70 codepoints and **no U+0020**, so
-every space fell back to another font at a different advance width. (The
-startpage has the same artefact — "the&nbsp;&nbsp;index" in its media
-column.) Regenerating with the space included makes spaces a proper 600-unit
-monospace advance, identical to `M`.
+every space had to fall back to another font.
+
+What it fell back *to* turned out to be the larger half of the problem, and
+it was not this repo's fault at all: `~/.config/fontconfig/fonts.conf` on
+this machine listed `Noto Color Emoji` as the **preferred** family for
+`sans-serif`, `serif` and `monospace` with `binding="strong"`. That font
+covers U+0020 and the digits 0-9 (they are keycap-emoji bases) but no
+letters, and its advance for them is 2550 units on a 2048 em — 1.245em,
+about five times a normal space. Every space and every digit on every page
+in every browser came out that wide while letters rendered normally.
+
+Two fixes, both needed: this subset now includes U+0020 (a proper 600-unit
+advance, identical to `M`), and the fontconfig rule now *appends* emoji to
+the generic chains instead of preferring it, so it is reached only for
+characters the text fonts do not cover.
 
 It still carries no Japanese and not even the 『』 brackets, so those come
 from the generic `monospace` fallback and only the handle renders in
